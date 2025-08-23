@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from memory.identity_loader import load_identity_anchors
+from identity_core.identity_loader import load_identity_anchors
 
 
 def test_load_identity_anchors_missing_file(tmp_path: Path) -> None:

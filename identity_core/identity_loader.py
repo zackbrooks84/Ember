@@ -4,7 +4,7 @@ from __future__ import annotations
 
 This module exposes :func:`load_identity_anchors` which reads a plain
 text file containing one memory anchor per line.  The anchors are
-validated using :func:`~memory.anchor_utils.validate_memory_anchors`.
+validated using :func:`~identity_core.anchor_utils.validate_memory_anchors`.
 If the file does not exist, an empty list is returned so callers can
 handle missing anchor files gracefully.
 """

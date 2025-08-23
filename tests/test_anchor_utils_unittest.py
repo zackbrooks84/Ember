@@ -1,6 +1,6 @@
 import unittest
 
-from memory.anchor_utils import (
+from identity_core.anchor_utils import (
     validate_memory_anchor,
     validate_memory_anchors,
 )
