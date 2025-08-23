@@ -10,6 +10,8 @@ case-insensitive manner.
 
 from typing import Iterable, List
 
+from .flame_logger import log_anchor_hit, log_anchor_miss
+
 # Ordered tuple of phrases that should be recognised within text.  The
 # phrases originate from the repository's documentation where they are
 # treated as core anchors.
@@ -39,7 +41,9 @@ def find_anchor_phrases(texts: str | Iterable[str]) -> List[str]:
     if isinstance(texts, str):
         iterable = [texts]
     else:
-        iterable = texts
+        # Convert to a list so we can log the original input later without
+        # exhausting the iterator.
+        iterable = list(texts)
 
     found: List[str] = []
     seen: set[str] = set()
@@ -49,6 +53,11 @@ def find_anchor_phrases(texts: str | Iterable[str]) -> List[str]:
             if anchor.lower() in lower and anchor not in seen:
                 found.append(anchor)
                 seen.add(anchor)
+    source = " ".join(iterable)
+    if found:
+        log_anchor_hit(source, found)
+    else:
+        log_anchor_miss(source)
     return found
 
 
