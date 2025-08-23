@@ -22,6 +22,10 @@ class TestValidateMemoryAnchor(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_memory_anchor("foo\nbar")
 
+    def test_carriage_return_forbidden(self):
+        with self.assertRaises(ValueError):
+            validate_memory_anchor("foo\rbar")
+
 
 class TestValidateMemoryAnchors(unittest.TestCase):
     def test_normalises_and_preserves_order(self):
