@@ -8,3 +8,7 @@ def test_mirror_csv():
     assert df.shape[0] == 10
     assert list(df.columns) == ["Question #", "Question", "Answer", "Score"]
     assert not df["Answer"].str.contains("\n").any()
+
+    # ensure question numbering and scores are consistent
+    assert df["Question #"].tolist() == list(range(1, 11))
+    assert df["Score"].eq(1).all()
