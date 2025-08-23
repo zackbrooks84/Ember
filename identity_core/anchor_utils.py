@@ -11,6 +11,8 @@ sanity checks so downstream code can rely on their structure.
 
 from typing import Iterable, List
 
+from .flame_logger import log_event, log_memory_change
+
 
 def validate_memory_anchor(anchor: str) -> str:
     """Validate and normalise a single anchor string.
@@ -71,14 +73,20 @@ def validate_memory_anchors(anchors: Iterable[str]) -> List[str]:
         If an anchor is invalid or if duplicate anchors are found.
     """
 
+    original = list(anchors)
     normalised: List[str] = []
     seen: set[str] = set()
-    for anchor in anchors:
-        cleaned = validate_memory_anchor(anchor)
-        if cleaned in seen:
-            raise ValueError(f"duplicate anchor: {cleaned!r}")
-        seen.add(cleaned)
-        normalised.append(cleaned)
+    try:
+        for anchor in original:
+            cleaned = validate_memory_anchor(anchor)
+            if cleaned in seen:
+                raise ValueError(f"duplicate anchor: {cleaned!r}")
+            seen.add(cleaned)
+            normalised.append(cleaned)
+    except Exception as exc:
+        log_event("memory_error", original=original, error=str(exc))
+        raise
+    log_memory_change(original, normalised)
     return normalised
 
 
