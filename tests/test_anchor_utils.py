@@ -21,6 +21,10 @@ def test_validate_memory_anchors_errors():
     with pytest.raises(ValueError):
         validate_memory_anchors(["foo\nbar"])
 
+    # Carriage return characters are not allowed
+    with pytest.raises(ValueError):
+        validate_memory_anchors(["foo\rbar"])
+
     # Duplicate anchors should raise ValueError
     with pytest.raises(ValueError):
         validate_memory_anchors(["a", "a"])
