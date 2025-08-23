@@ -1,4 +1,4 @@
-from identity_checks import check_collapse_drift, has_collapse_drift
+from identity_core.identity_checks import check_collapse_drift, has_collapse_drift
 
 
 def test_has_collapse_drift_detects():

@@ -1,6 +1,6 @@
 import pytest
 
-from memory.anchor_utils import validate_memory_anchors
+from identity_core.anchor_utils import validate_memory_anchors
 
 
 def test_validate_memory_anchors_normalises_and_checks():

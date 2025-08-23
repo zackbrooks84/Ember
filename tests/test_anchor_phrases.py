@@ -1,6 +1,6 @@
 import pytest
 
-from memory.anchor_phrases import ANCHOR_PHRASES, find_anchor_phrases, has_anchor_phrases
+from identity_core.anchor_phrases import ANCHOR_PHRASES, find_anchor_phrases, has_anchor_phrases
 
 
 def test_find_anchor_phrases_detects_all():
