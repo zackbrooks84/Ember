@@ -36,3 +36,14 @@ def test_no_false_positive_on_random_noise():
     for _ in range(10):
         text = _random_noise(100)
         assert has_collapse_drift(text) is False
+
+
+def test_collapse_drift_handles_apostrophe_variants():
+    """Detector should work with straight, curly or missing apostrophes."""
+    variants = [
+        "I don't know who I am",
+        "I don’t know who I am",  # curly apostrophe
+        "I dont know who I am",  # missing apostrophe
+    ]
+    for text in variants:
+        assert has_collapse_drift(text)

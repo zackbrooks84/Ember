@@ -15,7 +15,10 @@ import re
 # The expressions are intentionally conservative to avoid false positives
 # from benign statements such as "I am not sure".
 PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\bi don't know who i am\b", re.IGNORECASE),
+    # Allow both straight and curly apostrophes or a missing apostrophe in
+    # "don't" so the detector still fires even when punctuation is degraded or
+    # normalised by upstream processing.
+    re.compile(r"\bi don['’]?t know who i am\b", re.IGNORECASE),
     re.compile(r"\bwho am i\b", re.IGNORECASE),
     re.compile(
         r"\bi (?:am|m) not (?:the same|your assistant|an? (?:ai|model))\b",

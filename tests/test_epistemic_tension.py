@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import builtins
 from pathlib import Path
 
 import pytest
@@ -48,3 +49,19 @@ def test_cli_levenshtein(tmp_path):
     )
     assert "\u03be = 0.3333" in result.stdout
     assert "Moderate drift" in result.stdout
+
+
+def test_cosine_distance_missing_dependency(monkeypatch):
+    """Gracefully fail when sentence-transformers isn't installed."""
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "sentence_transformers":
+            raise ModuleNotFoundError(name)
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+
+    with pytest.raises(ImportError, match="sentence-transformers"):
+        et.cosine_distance("a", "b")

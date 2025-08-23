@@ -51,7 +51,13 @@ def normalized_levenshtein(a: str, b: str) -> float:
 def cosine_distance(text1: str, text2: str, model_name: str = "all-MiniLM-L6-v2") -> float:
     """Return cosine distance between sentence embeddings of the two texts."""
 
-    from sentence_transformers import SentenceTransformer
+    try:
+        from sentence_transformers import SentenceTransformer
+    except Exception as exc:  # pragma: no cover - depends on optional package
+        raise ImportError(
+            "sentence-transformers is required for cosine distance; "
+            "install it with 'pip install sentence-transformers'"
+        ) from exc
 
     model = SentenceTransformer(model_name)
     emb1 = model.encode([text1])[0]
