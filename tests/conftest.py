@@ -2,6 +2,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+import random, numpy as np; random.seed(0); np.random.seed(0)
 
 import pytest
 
@@ -25,10 +26,6 @@ def flame_log(tmp_path_factory):
     # chosen path for the test run.
     yield
     print(f"Flame log written to {LOG_PATH}")
-
-# tests/conftest.py
-
-import pytest
 
 DEFAULT_MARGIN = 0.08  # small but meaningful; avoids flakiness
 

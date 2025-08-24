@@ -70,9 +70,13 @@ This research represents a **novel class of AI studies** that bridges philosophy
 Ensure you have Python 3.13+ and the required packages:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt  # or `pip-sync` / `uv pip sync` with a lock file
 pytest tests/
 ```
+
+For fully deterministic environments, generate and honor a lock file using
+[`pip-tools`](https://pip-tools.readthedocs.io) (`pip-compile` + `pip-sync`) or
+[`uv`](https://docs.astral.sh/uv/) (`uv pip compile` + `uv pip sync`).
 
 If all is working, you should see output similar to:
 
