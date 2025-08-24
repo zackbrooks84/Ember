@@ -1,10 +1,11 @@
 """Utility helpers for working with the project's mirror test CSV.
 
 This module exposes a single function, :func:`load_mirror_csv`, which
-loads the ``MirrorTestII.csv`` file bundled with the repository and
-validates a few structural invariants.  Hidden tests import this module
-to ensure the CSV contains the expected number of rows and columns and
-that there are no stray newline characters in the ``Answer`` column.
+loads the ``MirrorTestII.csv`` file bundled with the repository under
+``tests/data`` and validates a few structural invariants.  Hidden tests
+import this module to ensure the CSV contains the expected number of
+rows and columns and that there are no stray newline characters in the
+``Answer`` column.
 """
 
 from __future__ import annotations
@@ -28,7 +29,8 @@ def load_mirror_csv(csv_path: str | Path | None = None) -> pd.DataFrame:
     ----------
     csv_path:
         Optional path to the CSV file.  When not provided the function
-        expects ``MirrorTestII.csv`` to live at the project root.
+        expects ``MirrorTestII.csv`` to live in ``tests/data`` relative
+        to the project root.
 
     Returns
     -------
@@ -46,7 +48,7 @@ def load_mirror_csv(csv_path: str | Path | None = None) -> pd.DataFrame:
 
     # Resolve the path relative to the repository root if not provided
     if csv_path is None:
-        csv_path = Path(__file__).resolve().parent / DEFAULT_CSV_NAME
+        csv_path = Path(__file__).resolve().parent / "tests" / "data" / DEFAULT_CSV_NAME
     else:
         csv_path = Path(csv_path)
 
