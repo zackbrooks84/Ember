@@ -85,6 +85,15 @@ If all is working, you should see output similar to:
 46 passed in <time>s
 ```
 
+## 🔁 Reproduce the Paper Figures
+
+Regenerate the key figures from the raw metrics CSVs:
+
+```bash
+python trajectory_plot.py "xi_metrics ξ‑mapping tool.csv" --output xi_curve.png
+python trajectory_plot.py __metrics___WITH_anchors.csv --output stabilization_traj.png
+```
+
 ---
 
 ## 🔭 What This Research Suggests
