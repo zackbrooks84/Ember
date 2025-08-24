@@ -4,9 +4,9 @@ from __future__ import annotations
 
 This utility compares the bundled baseline metrics with the anchored
 run to highlight the drift contrast described in the paper.  By default
-it reads ``baseline_run.csv`` (no anchors or memory) and
-``__metrics___WITH_anchors.csv`` (anchored) from the repository root
-and reports the mean ``ξ`` values and their difference.
+it reads ``tests/data/baseline_run.csv`` (no anchors or memory) and
+``tests/data/__metrics___WITH_anchors.csv`` (anchored) and reports the
+mean ``ξ`` values and their difference.
 """
 
 import argparse
@@ -14,8 +14,9 @@ from pathlib import Path
 
 import pandas as pd
 
-BASELINE_CSV = Path(__file__).with_name("baseline_run.csv")
-ANCHOR_CSV = Path(__file__).with_name("__metrics___WITH_anchors.csv")
+DATA_DIR = Path(__file__).resolve().parent / "tests" / "data"
+BASELINE_CSV: Path = DATA_DIR / "baseline_run.csv"
+ANCHOR_CSV: Path = DATA_DIR / "__metrics___WITH_anchors.csv"
 
 
 def compare_runs(baseline_csv: str | Path, anchor_csv: str | Path) -> tuple[float, float, float]:

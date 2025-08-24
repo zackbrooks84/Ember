@@ -96,8 +96,8 @@ If all is working, you should see output similar to:
 Regenerate the key figures from the raw metrics CSVs:
 
 ```bash
-python trajectory_plot.py "xi_metrics ξ‑mapping tool.csv" --output xi_curve.png
-python trajectory_plot.py __metrics___WITH_anchors.csv --output stabilization_traj.png
+python trajectory_plot.py "documents/xi_metrics ξ‑mapping tool.csv" --output xi_curve.png
+python trajectory_plot.py tests/data/__metrics___WITH_anchors.csv --output stabilization_traj.png
 ```
 
 ---
@@ -105,8 +105,9 @@ python trajectory_plot.py __metrics___WITH_anchors.csv --output stabilization_tr
 ## 🔁 Baseline Drift Run
 
 The repository bundles a no-memory/no-anchor baseline in
-`baseline_run.csv`.  To contrast it with the anchored metrics in a single
-command:
+`tests/data/baseline_run.csv` and the corresponding anchored metrics in
+`tests/data/__metrics___WITH_anchors.csv`. Both live under the shared
+`tests/data` fixture folder, so you can contrast them with a single command:
 
 ```bash
 python baseline_run.py
