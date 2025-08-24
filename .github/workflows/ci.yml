@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: tests
 
 on:
@@ -8,51 +7,45 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-latest
+    # don't cancel 3.12/3.13 just because 3.11 fails
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.11', '3.12', '3.13']
 
     steps:
-      - name: Checkout
+      - name: Check out
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
+      - name: Show environment (quick sanity)
+        run: |
+          pwd
+          python --version
+          ls -la
+          echo "--- tests directory ---"
+          ls -la tests || true
+          echo "--- repo tree (top 2 levels) ---"
+          find . -maxdepth 2 -type d -print
+
       - name: Install deps
         run: |
           python -m pip install -U pip
-          pip install -r requirements.txt
-          pip install pytest
+          # install pytest explicitly in case it's not pinned in requirements.txt
+          pip install -r requirements.txt pytest
 
-      # 1) Regular suite only (skip empirical so the run doesn't fail if no snapshot yet)
-      - name: Run full test suite (non-empirical)
-        run: pytest -v ./tests -m "not empirical" --junitxml=report.xml
+      # Quick collection to fail early if pytest can't see tests
+      - name: Pytest collect-only (debug)
+        run: pytest -q --collect-only
 
-      - name: Upload unit test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-${{ matrix.python-version }}
-          path: report.xml
+      - name: Run full test suite
+        run: pytest -v
 
-      # 2) Create golden snapshot once if it's missing
-      - name: Create golden snapshot if missing
-        run: |
-          if [ ! -f tests/_golden_metrics.json ]; then
-            UPDATE_GOLDEN=1 pytest -v tests/test_golden_metrics.py -m empirical
-          fi
-
-      # 3) Validate empirical metrics against snapshot
+      # Golden metrics (runs even if above failed on some versions thanks to fail-fast: false)
       - name: Empirical golden metrics
-        run: pytest -v tests/test_golden_metrics.py -m empirical --junitxml=report_empirical.xml
-
-      - name: Upload empirical report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-empirical-${{ matrix.python-version }}
-          path: report_empirical.xml
+        run: pytest -v tests/test_golden_metrics.py -m empirical
