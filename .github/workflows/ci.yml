@@ -7,7 +7,6 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-latest
-    # don't cancel 3.12/3.13 just because 3.11 fails
     strategy:
       fail-fast: false
       matrix:
@@ -23,29 +22,48 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Show environment (quick sanity)
+      - name: Show environment (sanity)
         run: |
-          pwd
           python --version
+          pwd
           ls -la
-          echo "--- tests directory ---"
+          echo "--- tests dir ---"
           ls -la tests || true
-          echo "--- repo tree (top 2 levels) ---"
+          echo "--- top of repo ---"
           find . -maxdepth 2 -type d -print
 
       - name: Install deps
         run: |
           python -m pip install -U pip
-          # install pytest explicitly in case it's not pinned in requirements.txt
+          # ensure pytest is present even if not pinned in requirements.txt
           pip install -r requirements.txt pytest
+          pip freeze > pip-freeze.txt
 
-      # Quick collection to fail early if pytest can't see tests
       - name: Pytest collect-only (debug)
-        run: pytest -q --collect-only
+        run: |
+          pytest -q --collect-only | tee collect.out
 
       - name: Run full test suite
-        run: pytest -v
+        # save console output + junit xml so you can read failures easily
+        run: |
+          pytest -vv --maxfail=1 --durations=10 --junitxml=report.xml | tee pytest.out
+        # always run so artifacts upload even on failure
+        continue-on-error: true
 
-      # Golden metrics (runs even if above failed on some versions thanks to fail-fast: false)
       - name: Empirical golden metrics
-        run: pytest -v tests/test_golden_metrics.py -m empirical
+        run: |
+          pytest -vv tests/test_golden_metrics.py -m empirical | tee golden.out
+        continue-on-error: true
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-${{ matrix.python-version }}
+          path: |
+            pytest.out
+            collect.out
+            golden.out
+            report.xml
+            pip-freeze.txt
+          if-no-files-found: warn
