@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: tests
 
 on:
@@ -12,9 +13,10 @@ jobs:
         python-version: ['3.11', '3.12', '3.13']
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -26,14 +28,31 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Run full test suite
-        run: pytest -v ./tests  # ✅ Explicit relative path
+      # 1) Regular suite only (skip empirical so the run doesn't fail if no snapshot yet)
+      - name: Run full test suite (non-empirical)
+        run: pytest -v ./tests -m "not empirical" --junitxml=report.xml
 
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-${{ matrix.python-version }}
+          path: report.xml
+
+      # 2) Create golden snapshot once if it's missing
       - name: Create golden snapshot if missing
         run: |
           if [ ! -f tests/_golden_metrics.json ]; then
-            UPDATE_GOLDEN=1 pytest -v tests/test_golden_metrics.py
+            UPDATE_GOLDEN=1 pytest -v tests/test_golden_metrics.py -m empirical
           fi
 
+      # 3) Validate empirical metrics against snapshot
       - name: Empirical golden metrics
-        run: pytest -v tests/test_golden_metrics.py -m empirical
+        run: pytest -v tests/test_golden_metrics.py -m empirical --junitxml=report_empirical.xml
+
+      - name: Upload empirical report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-empirical-${{ matrix.python-version }}
+          path: report_empirical.xml
