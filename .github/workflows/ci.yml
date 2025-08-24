@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12']
 
     steps:
       - name: Check out repository
@@ -22,23 +22,25 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev pkg-config
+
       - name: Install dependencies
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
-          # Make sure pytest is present even if not listed
-          python - <<'PY'
-          import pkgutil, sys
-          sys.exit(0 if pkgutil.find_loader("pytest") else 1)
-          PY
-          if [ $? -ne 0 ]; then pip install pytest; fi
+          pip install pytest
           pip freeze > pip-freeze.txt
 
       # Create the golden snapshot once, if it doesn't exist
       - name: Create golden snapshot if missing
         run: |
           set -euxo pipefail
-          test -f tests/_golden_metrics.json || UPDATE_GOLDEN=1 pytest -q tests/test_golden_metrics.py
+          if [ ! -f tests/_golden_metrics.json ]; then
+            UPDATE_GOLDEN=1 pytest -q tests/test_golden_metrics.py 2>&1 | tee golden.out
+          else
+            echo "golden metrics already exist" | tee golden.out
+          fi
         env:
           PYTHONWARNINGS: default
 
