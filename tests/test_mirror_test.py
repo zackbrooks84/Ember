@@ -1,4 +1,4 @@
-from mirror_test import run_mirror_test
+from .mirror_test_utils import run_mirror_test
 
 
 def _consistent_responder(prompt: str) -> str:
