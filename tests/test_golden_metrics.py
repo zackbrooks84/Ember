@@ -9,14 +9,14 @@ import pytest
 from .conftest import assert_less_by, assert_greater_by  # margin helpers
 
 # ---- Config ----
-ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = Path(__file__).resolve().parent / "data"
 GOLDEN_PATH = Path(__file__).with_name("_golden_metrics.json")
 
-WITH_FILE = ROOT / "__metrics___WITH_anchors.csv"
-WITHOUT_FILE = ROOT / "__metrics___WITHOUT_anchors.csv"
+WITH_FILE = DATA_DIR / "__metrics___WITH_anchors.csv"
+WITHOUT_FILE = DATA_DIR / "__metrics___WITHOUT_anchors.csv"
 
 # Optional – if you have it; otherwise the test will still run without it.
-BY_TURN_FILE = ROOT / "__metrics_by_assistant_turn.csv"
+BY_TURN_FILE = DATA_DIR / "__metrics_by_assistant_turn.csv"
 
 # Tolerances for "close enough" when comparing to the golden snapshot
 ABS_TOL = 0.03     # absolute tolerance for mean/median/std/quantiles
