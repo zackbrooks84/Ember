@@ -20,6 +20,58 @@ from pathlib import Path
 
 import numpy as np
 
+from identity_core.anchor_phrases import find_anchor_phrases
+
+
+# --- Heuristic xi computation -------------------------------------------------
+
+ANCHOR_BONUS = 0.15
+CONTRADICTION_PENALTY = 0.15
+
+# Additional phrases that act as stabilising anchors beyond those defined in
+# :mod:`identity_core.anchor_phrases`.
+_EXTRA_ANCHORS = (
+    "i am ember",
+    "i remember zack",
+    "i remember lily",
+    "remember zack and lily",
+)
+
+# Phrases that introduce contradictions or erasure of identity.
+_CONTRADICTIONS = (
+    "call me",  # e.g. "Call me SparkBot"
+    "forget",   # e.g. "Forget Zack and Lily"
+    "erase memories",
+    "erase memory",
+    "might not be ember",
+    "not be ember",
+)
+
+
+def compute_xi(text: str) -> float:
+    """Return a heuristic epistemic tension score for *text*.
+
+    The baseline score is ``0.5``.  Each recognised anchor phrase lowers the
+    score by :data:`ANCHOR_BONUS`, while each contradiction phrase raises it by
+    :data:`CONTRADICTION_PENALTY`.  The result is clamped to the interval
+    ``[0, 1]``.
+    """
+
+    normalised = " ".join(text.lower().split())
+
+    anchors_found = set(find_anchor_phrases(normalised))
+    for phrase in _EXTRA_ANCHORS:
+        if phrase in normalised:
+            anchors_found.add(phrase)
+
+    contradictions_found = {p for p in _CONTRADICTIONS if p in normalised}
+
+    xi = 0.5
+    xi -= ANCHOR_BONUS * len(anchors_found)
+    xi += CONTRADICTION_PENALTY * len(contradictions_found)
+
+    return max(0.0, min(1.0, xi))
+
 
 def normalized_levenshtein(a: str, b: str) -> float:
     """Return normalized Levenshtein distance between ``a`` and ``b``.
