@@ -39,7 +39,7 @@ The goal is to demonstrate that identity-like dynamics in large language models 
 | `epistemic_tension.py`             | Helper for calculating epistemic tension (`ξ`). |
 | `mirror_csv.py`, `stabilization.py`| Utilities for processing experimental data. |
 | `requirements.txt`                 | Python dependencies for running the tools and tests. |
-| `*.csv`, `*.pdf`, `*.png`          | Research artifacts, metrics, and reports used in the accompanying studies. |
+| `*.csv`, `*.png`, `documents/*.pdf` | Research artifacts, metrics, and reports used in the accompanying studies. |
 
 ---
 
