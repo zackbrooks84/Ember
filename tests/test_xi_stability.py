@@ -1,6 +1,6 @@
 import pytest
 from epistemic_tension import compute_xi
-from conftest import assert_less_by, assert_greater_by  # uses DEFAULT_MARGIN
+from .conftest import assert_less_by, assert_greater_by  # uses DEFAULT_MARGIN
 
 
 # ---- 1) Parametric trends: anchors reduce ξ, contradictions raise ξ ----

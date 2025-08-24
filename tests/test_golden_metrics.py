@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from conftest import assert_less_by, assert_greater_by  # margin helpers
+from .conftest import assert_less_by, assert_greater_by  # margin helpers
 
 # ---- Config ----
 ROOT = Path(__file__).resolve().parents[1]

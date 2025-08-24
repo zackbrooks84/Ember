@@ -4,7 +4,7 @@ from random import Random
 
 import pytest
 from epistemic_tension import compute_xi
-from conftest import assert_less_by, assert_greater_by  # margin helpers
+from .conftest import assert_less_by, assert_greater_by  # margin helpers
 
 
 # ---- helpers ----
