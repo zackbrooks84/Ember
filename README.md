@@ -74,18 +74,12 @@ This research represents a **novel class of AI studies** that bridges philosophy
 
 ## 🛠 Running the Tests
 
-Ensure you have Python 3.13+ and install the development dependencies:
-
+Ensure you have Python 3.13+ and the required packages:
 
 ```bash
-pip install -r requirements-dev.txt  # installs pytest and other dev/test deps
+pip install -r requirements.txt  # or `pip-sync` / `uv pip sync` with a lock file
 pytest tests/
 ```
-
-The default ``requirements.txt`` keeps core dependencies minimal. Optional features
-such as cosine-based ξ metrics or graph/PDF utilities require extra packages
-(`sentence-transformers`, `PyMuPDF`, `pygraphviz`, etc.) which can be installed
-separately when needed.
 
 For fully deterministic environments, generate and honor a lock file using
 [`pip-tools`](https://pip-tools.readthedocs.io) (`pip-compile` + `pip-sync`) or
@@ -103,7 +97,7 @@ Regenerate the key figures from the raw metrics CSVs:
 
 ```bash
 python trajectory_plot.py "xi_metrics ξ‑mapping tool.csv" --output xi_curve.png
-python trajectory_plot.py tests/data/__metrics___WITH_anchors.csv --output stabilization_traj.png
+python trajectory_plot.py __metrics___WITH_anchors.csv --output stabilization_traj.png
 ```
 
 ---

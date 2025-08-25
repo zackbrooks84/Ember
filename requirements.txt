@@ -1,13 +1,9 @@
-# Core dependencies for the project. 
-# 
-# This project has a few optional features that rely on heavier third-party 
-# libraries such as `sentence-transformers, PyMuPDF, scikit-learn and 
-# `pygraphviz. Those packages are not needed for the core modules, so they 
-# are omitted here to keep installation light-weight. Install them separately 
-# if you intend to use the related functionality. 
-# Exact version pins. For deterministic installs consider generating a lock 
-# file via pip-compile (pip-tools) or uv pip compile. 
-
-numpy==1.26.4 
-pandas==2.1.4 
+# Exact version pins. For deterministic installs consider
+# generating a lock file via `pip-compile` (pip-tools) or `uv pip compile`.
+numpy==1.26.4
+pandas==2.1.4
+scikit-learn==1.3.2
 matplotlib==3.7.2
+PyMuPDF==1.22.5
+sentence-transformers==2.2.2
+pygraphviz==1.14
