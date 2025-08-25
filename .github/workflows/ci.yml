@@ -1,21 +1,19 @@
-name: tests (windows-only)
+name: tests
 
 on:
   push:
   pull_request:
 
 jobs:
-  # quick sanity pass — unit tests only
-  light:
-    name: Light tests (unit-only) — Windows, Py${{ matrix.python-version }}
-    runs-on: windows-latest
+  pytest:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.12']
 
     steps:
-      - name: Check out repo
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -24,109 +22,58 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install Graphviz (Windows)
-        shell: powershell
-        run: |
-          choco install graphviz --no-progress -y
-          echo "C:\Program Files\Graphviz\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev pkg-config
 
-      - name: Install deps
-        shell: bash
+      - name: Install dependencies
         run: |
-          python -m pip install -U pip wheel
+          python -m pip install -U pip
           pip install -r requirements.txt
-          # dev tools + pytest
-          pip install -r requirements-dev.txt
-          # fallbacks: don't fail the light pass if optional heavy libs are missing
-          pip install sentence-transformers PyMuPDF scikit-learn pygraphviz || true
+          pip install pytest
           pip freeze > pip-freeze.txt
 
-      - name: Pytest (unit-only markers)
-        shell: bash
-        env:
-          # Skip slow / optional tests in the light job
-          PYTEST_ADDOPTS: "-m 'not heavy and not empirical'"
-        run: |
-          pytest -q --collect-only | tee collect.out
-          pytest -v --maxfail=1 --durations=25 | tee pytest.out
-        continue-on-error: false
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: light-windows-py${{ matrix.python-version }}
-          path: |
-            collect.out
-            pytest.out
-            pip-freeze.txt
-          if-no-files-found: ignore
-
-  # full suite (Windows only)
-  full:
-    name: Full tests (all markers) — Windows, Py${{ matrix.python-version }}
-    runs-on: windows-latest
-    needs: light
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.12']
-
-    steps:
-      - name: Check out repo
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-
-      - name: Install Graphviz (Windows)
-        shell: powershell
-        run: |
-          choco install graphviz --no-progress -y
-          echo "C:\Program Files\Graphviz\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Install deps (include heavy/optional)
-        shell: bash
-        run: |
-          python -m pip install -U pip wheel
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          # try the heavier optional libs; allow pygraphviz to fail gracefully on Windows
-          pip install sentence-transformers PyMuPDF scikit-learn || true
-          pip install pygraphviz || echo "pygraphviz build failed; plot tests may be skipped"
-          pip freeze > pip-freeze.txt
-
+      # Create the golden snapshot once, if it doesn't exist
       - name: Create golden snapshot if missing
-        shell: bash
-        env:
-          PYTHONWARNINGS: default
         run: |
+          set -euxo pipefail
           if [ ! -f tests/_golden_metrics.json ]; then
-            UPDATE_GOLDEN=1 pytest -q tests/test_golden_metrics.py | tee golden.out
+            UPDATE_GOLDEN=1 pytest -q tests/test_golden_metrics.py 2>&1 | tee golden.out
           else
             echo "golden metrics already exist" | tee golden.out
           fi
+        env:
+          PYTHONWARNINGS: default
 
-      - name: Pytest (full suite)
-        shell: bash
+      # Run full suite; always tee to files so we can upload them
+      - name: Run pytest (collect only)
+        id: collect
         run: |
-          pytest -q --collect-only | tee collect.out
-          # Run everything except explicitly @pytest.mark.heavy if you want truly all, remove the -m filter.
-          pytest -v --maxfail=1 --durations=25 \
-                 --junitxml=report.xml \
-                 -m "not heavy" | tee pytest.out
+          set -euxo pipefail
+          pytest --collect-only -q 2>&1 | tee collect.out
+          echo "collected=ok" >> $GITHUB_OUTPUT
+        shell: bash
 
+      - name: Run pytest (suite)
+        id: run
+        run: |
+          set -euxo pipefail
+          # xunit-xml gives a machine-readable report for a quick glance
+          pytest -v tests/ --maxfail=1 --durations=25 \
+                --junitxml=report.xml 2>&1 | tee pytest.out
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> $GITHUB_OUTPUT
+          exit $status
+        shell: bash
+
+      # Upload whatever we have, even if tests failed
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: full-windows-py${{ matrix.python-version }}
+          name: pytest-${{ matrix.python-version }}
           path: |
-            collect.out
             pytest.out
+            collect.out
             golden.out
             report.xml
             pip-freeze.txt
