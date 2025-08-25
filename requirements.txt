@@ -9,6 +9,7 @@
 # Exact version pins. For deterministic installs consider generating a lock
 # file via `pip-compile` (pip-tools) or `uv pip compile`.
 
+pytest==8.4.1
 numpy==1.26.4
 pandas==2.1.4
 matplotlib==3.7.2
