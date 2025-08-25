@@ -1,14 +1,10 @@
-# Development and test dependencies.
-# Includes core requirements plus tools needed for running the full test suite.
-
+# requirements-dev.txt — FULL dev (builds on full runtime)
 -r requirements.txt
 
-# Testing framework
 pytest>=8.1
-pytest-cov>=4.1        # coverage reporting
-hypothesis>=6.100      # property-based testing
+pytest-cov>=4.1
+hypothesis>=6.100
 
-# Linters / formatters (optional but recommended)
 black>=24.4
 isort>=5.13
 flake8>=7.0
