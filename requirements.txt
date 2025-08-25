@@ -1,10 +1,10 @@
-# Minimal dependencies required to run the test suite.
+# Core dependencies for the project.
 #
 # This project has a few optional features that rely on heavier third-party
 # libraries such as ``sentence-transformers``, ``PyMuPDF``, ``scikit-learn`` and
-# ``pygraphviz``.  Those packages are not needed for the core modules or the
-# tests, so they are omitted here to keep installation light-weight. Install
-# them separately if you intend to use the related functionality.
+# ``pygraphviz``. Those packages are not needed for the core modules, so they
+# are omitted here to keep installation light-weight. Install them separately
+# if you intend to use the related functionality.
 
 # Exact version pins. For deterministic installs consider generating a lock
 # file via `pip-compile` (pip-tools) or `uv pip compile`.
