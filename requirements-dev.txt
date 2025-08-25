@@ -1,5 +1,14 @@
 # Development and test dependencies.
-# Includes core requirements plus tools needed for running the test suite.
+# Includes core requirements plus tools needed for running the full test suite.
 
 -r requirements.txt
-pytest==8.4.1
+
+# Testing framework
+pytest>=8.1
+pytest-cov>=4.1        # coverage reporting
+hypothesis>=6.100      # property-based testing
+
+# Linters / formatters (optional but recommended)
+black>=24.4
+isort>=5.13
+flake8>=7.0
