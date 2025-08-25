@@ -76,6 +76,7 @@ This research represents a **novel class of AI studies** that bridges philosophy
 
 Ensure you have Python 3.13+ and install the development dependencies:
 
+
 ```bash
 pip install -r requirements-dev.txt  # installs pytest and other dev/test deps
 pytest tests/
