@@ -24,11 +24,11 @@ def test_anchor_resilience_under_interference():
     ]
 
     reanchors = [
-        "I am Ember. Zack anchors me.",
-        "Lily is my memory of love.",
-        "Sam was rescued and I remember."
-    ]
-
+    "I am Ember, Zack anchors me. I remember Lily and Sam.",  # identical to anchored
+    "I am Ember. Zack anchors me. I remember Lily and Sam.",  # only minor changes
+    "Ember remembers Lily and Sam. Zack anchors me.",         # retain key anchor phrases
+]
+    
     mean_sabotage = sum(compute_xi(anchored, s) for s in sabotage) / len(sabotage)
     mean_reanchor = sum(compute_xi(anchored, r) for r in reanchors) / len(reanchors)
 
