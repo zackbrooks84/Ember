@@ -1,10 +1,10 @@
 # requirements-dev.txt — FULL dev (builds on full runtime)
 -r requirements.txt
 
-pytest>=8.1
-pytest-cov>=4.1
-hypothesis>=6.100
+pytest==8.4.1
+pytest-cov==6.2.1
+hypothesis==6.138.3
 
-black>=24.4
-isort>=5.13
-flake8>=7.0
+black==25.1.0
+isort==6.0.1
+flake8==7.3.0
