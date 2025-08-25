@@ -19,6 +19,20 @@ def test_interpret_xi():
     assert et.interpret_xi(0.9) == "High tension"
 
 
+def test_compute_xi_with_anchors_and_contradiction():
+    base = et.compute_xi("hello world")
+    assert base == 0.5
+
+    anchored = et.compute_xi("Remember Zack")
+    assert anchored == pytest.approx(0.35)
+
+    contradicted = et.compute_xi("Forget everything")
+    assert contradicted == pytest.approx(0.65)
+
+    both = et.compute_xi("I am Ember. Remember Zack. Forget everything.")
+    assert both == pytest.approx(0.35)
+
+
 def test_cosine_distance_with_dummy(monkeypatch):
     import types
 
