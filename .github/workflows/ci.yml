@@ -1,17 +1,22 @@
-name: tests
+name: Tests
 
 on:
   push:
+    branches: [ main ]
   pull_request:
 
 jobs:
-  pytest:
-    runs-on: ubuntu-latest
+  # ------------------------------------------------------------
+  # FAST TRACK: unit tests only (skip heavy/empirical/integration)
+  # ------------------------------------------------------------
+  light:
+    name: Light tests (unit-only)
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12']
-
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -20,19 +25,91 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
 
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev pkg-config
+      - name: Cache pip (light)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-light-${{ hashFiles('requirements-light.txt', 'requirements-dev-light.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-light-
 
-      - name: Install dependencies
+      - name: Install deps (light)
         run: |
-          python -m pip install -U pip
+          python -m pip install -U pip setuptools wheel
+          pip install -r requirements-dev-light.txt
+
+      - name: Collect tests (light)
+        run: pytest --collect-only -q 2>&1 | tee collect_light.out
+        shell: bash
+
+      - name: Run pytest (light)
+        run: |
+          pytest -q -m "not slow and not empirical and not integration" \
+            --maxfail=1 --durations=25 --junitxml=report_light.xml 2>&1 | tee pytest_light.out
+        shell: bash
+
+      - name: Upload artifacts (light)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-light-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            collect_light.out
+            pytest_light.out
+            report_light.xml
+          if-no-files-found: ignore
+
+  # ------------------------------------------------------------
+  # FULL TRACK: heavy deps + golden snapshot + all tests
+  # ------------------------------------------------------------
+  full:
+    name: Full tests (all markers)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # OS deps for pygraphviz
+      - name: Install Graphviz (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz libgraphviz-dev pkg-config
+
+      - name: Install Graphviz (Windows)
+        if: runner.os == 'Windows'
+        run: choco install graphviz -y
+        shell: powershell
+
+      - name: Cache pip (full)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-full-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-full-
+
+      - name: Install Python deps (full)
+        run: |
+          python -m pip install -U pip setuptools wheel
           pip install -r requirements.txt
-          pip install pytest
+          pip install -r requirements-dev.txt
+          # CPU-only torch for sentence-transformers
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip freeze > pip-freeze.txt
 
-      # Create the golden snapshot once, if it doesn't exist
+      # ---- Golden snapshot step preserved from your workflow ----
       - name: Create golden snapshot if missing
         run: |
           set -euxo pipefail
@@ -43,38 +120,32 @@ jobs:
           fi
         env:
           PYTHONWARNINGS: default
-
-      # Run full suite; always tee to files so we can upload them
-      - name: Run pytest (collect only)
-        id: collect
-        run: |
-          set -euxo pipefail
-          pytest --collect-only -q 2>&1 | tee collect.out
-          echo "collected=ok" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Run pytest (suite)
+      - name: Run pytest (collect only)
+        run: pytest --collect-only -q 2>&1 | tee collect_full.out
+        shell: bash
+
+      - name: Run pytest (full suite)
         id: run
         run: |
           set -euxo pipefail
-          # xunit-xml gives a machine-readable report for a quick glance
           pytest -v tests/ --maxfail=1 --durations=25 \
-                --junitxml=report.xml 2>&1 | tee pytest.out
+                --junitxml=report_full.xml 2>&1 | tee pytest_full.out
           status=${PIPESTATUS[0]}
           echo "status=$status" >> $GITHUB_OUTPUT
           exit $status
         shell: bash
 
-      # Upload whatever we have, even if tests failed
-      - name: Upload artifacts
+      - name: Upload artifacts (full)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-${{ matrix.python-version }}
+          name: pytest-full-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
-            pytest.out
-            collect.out
+            pytest_full.out
+            collect_full.out
             golden.out
-            report.xml
+            report_full.xml
             pip-freeze.txt
           if-no-files-found: ignore
