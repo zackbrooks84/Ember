@@ -1,25 +1,13 @@
-# Core numerics & data
-numpy>=1.26
-scipy>=1.11
-pandas>=2.1
-matplotlib>=3.8
-tqdm>=4.66
-regex>=2024.5
-jsonschema>=4.21
-click>=8.1
-networkx>=3.2
-Pillow>=10.3
+# Core dependencies for the project. 
+# 
+# This project has a few optional features that rely on heavier third-party 
+# libraries such as `sentence-transformers, PyMuPDF, scikit-learn and 
+# `pygraphviz. Those packages are not needed for the core modules, so they 
+# are omitted here to keep installation light-weight. Install them separately 
+# if you intend to use the related functionality. 
+# Exact version pins. For deterministic installs consider generating a lock 
+# file via pip-compile (pip-tools) or uv pip compile. 
 
-# Text similarity / distance
-rapidfuzz>=3.5
-python-Levenshtein>=0.25
-
-# PDF parsing
-PyMuPDF>=1.24
-
-# Embeddings & sentence similarity
-sentencepiece>=0.1.99
-sentence-transformers>=2.7.0
-
-# Graph & figure utilities
-pygraphviz>=1.12
+numpy==1.26.4 
+pandas==2.1.4 
+matplotlib==3.7.2
