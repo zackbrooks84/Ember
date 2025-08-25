@@ -1,0 +1,5 @@
+# Development and test dependencies.
+# Includes core requirements plus tools needed for running the test suite.
+
+-r requirements.txt
+pytest==8.4.1
