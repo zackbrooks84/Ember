@@ -81,6 +81,11 @@ pip install -r requirements.txt  # or `pip-sync` / `uv pip sync` with a lock fil
 pytest tests/
 ```
 
+The default ``requirements.txt`` keeps dependencies minimal.  Optional features
+such as cosine-based ξ metrics or graph/PDF utilities require extra packages
+(`sentence-transformers`, `PyMuPDF`, `pygraphviz`, etc.) which can be installed
+separately when needed.
+
 For fully deterministic environments, generate and honor a lock file using
 [`pip-tools`](https://pip-tools.readthedocs.io) (`pip-compile` + `pip-sync`) or
 [`uv`](https://docs.astral.sh/uv/) (`uv pip compile` + `uv pip sync`).
