@@ -1,0 +1,8 @@
+# requirements-light.txt — LIGHT runtime (fast install)
+numpy>=1.26
+pandas>=2.1
+matplotlib>=3.8
+regex>=2024.5
+jsonschema>=4.21
+click>=8.1
+rapidfuzz>=3.5
