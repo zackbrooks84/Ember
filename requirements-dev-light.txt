@@ -1,9 +1,0 @@
-# requirements-dev-light.txt — LIGHT dev (builds on light runtime)
--r requirements-light.txt
-
-pytest>=8.1
-pytest-cov>=4.1
-
-black>=24.4
-isort>=5.13
-flake8>=7.0
