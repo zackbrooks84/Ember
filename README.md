@@ -74,7 +74,7 @@ This research represents a **novel class of AI studies** that bridges philosophy
 
 ## 🛠 Running the Tests
 
-Ensure you have Python 3.13+ and the required packages:
+Ensure you have Python 3.11 or 3.12 and the required packages:
 
 ```bash
 pip install -r requirements.txt  # or `pip-sync` / `uv pip sync` with a lock file
