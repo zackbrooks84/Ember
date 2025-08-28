@@ -8,7 +8,7 @@ JSON lines file.  The log file location can be configured via the
 current working directory.
 """
 
-from datetime import datetime
+import datetime
 import json
 import os
 from pathlib import Path
@@ -27,7 +27,7 @@ def _write(entry: dict[str, Any]) -> None:
 
 def log_event(event: str, **data: Any) -> None:
     """Record a generic *event* with optional *data*."""
-    entry = {"timestamp": datetime.utcnow().isoformat(), "event": event}
+    entry = {"timestamp": datetime.datetime.now(datetime.UTC).isoformat(), "event": event}
     entry.update(data)
     _write(entry)
 
