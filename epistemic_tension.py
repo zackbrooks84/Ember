@@ -17,8 +17,15 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
 import numpy as np
+
+_encoding = getattr(sys.stdout, "encoding", None)
+if _encoding is None or _encoding.lower() != "utf-8":
+    _reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if _reconfigure is not None:
+        _reconfigure(encoding="utf-8")
 
 from identity_core.anchor_phrases import find_anchor_phrases
 
