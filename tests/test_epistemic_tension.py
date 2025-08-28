@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 import builtins
 from pathlib import Path
 
@@ -46,6 +47,7 @@ def test_cli_levenshtein(tmp_path):
         capture_output=True,
         text=True,
         check=True,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     assert "\u03be = 0.3333" in result.stdout
     assert "Moderate drift" in result.stdout
