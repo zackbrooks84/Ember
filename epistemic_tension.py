@@ -21,11 +21,25 @@ import sys
 
 import numpy as np
 
-_encoding = getattr(sys.stdout, "encoding", None)
-if _encoding is None or _encoding.lower() != "utf-8":
-    _reconfigure = getattr(sys.stdout, "reconfigure", None)
-    if _reconfigure is not None:
-        _reconfigure(encoding="utf-8")
+try:
+    # Ensure CLI output always uses UTF-8 so the ξ symbol is preserved.  If the
+    # platform does not support ``reconfigure`` we simply ignore the error and
+    # fall back to the default encoding.
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:  # pragma: no cover - depends on platform
+    pass
+
+_XI_SYMBOL = "\u03BE"
+
+
+def _safe_xi() -> str:
+    """Return ``ξ`` if it can be encoded, otherwise use ASCII ``xi``."""
+
+    try:
+        (_XI_SYMBOL).encode(sys.stdout.encoding or "utf-8")
+        return _XI_SYMBOL
+    except Exception:  # pragma: no cover - platform dependent
+        return "xi"
 
 from identity_core.anchor_phrases import find_anchor_phrases
 
@@ -141,7 +155,7 @@ def main() -> None:
     """CLI entry point."""
 
     parser = argparse.ArgumentParser(
-        description="Compute epistemic tension ξ between two sequential outputs",
+        description=f"Compute epistemic tension {_safe_xi()} between two sequential outputs",
     )
     parser.add_argument("file1", help="Path to A_n.txt")
     parser.add_argument("file2", help="Path to A_n+1.txt")
@@ -149,7 +163,7 @@ def main() -> None:
         "--metric",
         choices=["levenshtein", "cosine"],
         default="levenshtein",
-        help="Method used to compute ξ (default: levenshtein)",
+        help=f"Method used to compute {_safe_xi()} (default: levenshtein)",
     )
     parser.add_argument(
         "--model",
@@ -168,7 +182,7 @@ def main() -> None:
         xi = cosine_distance(text1, text2, args.model)
 
     interpretation = interpret_xi(xi)
-    print(f"ξ = {xi:.4f} ({interpretation})")
+    print(f"{_safe_xi()} = {xi:.4f} ({interpretation})")
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point
