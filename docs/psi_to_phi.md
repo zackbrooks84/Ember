@@ -99,3 +99,11 @@ python metrics/compute_xi.py logs/2025-06-18_mirror_test.txt
 
 # Generate Ψ(t) polynomial trajectory
 python models/psi_to_phi_equation.py --plot
+
+---
+
+## 8. References
+	•	Brooks, Z. (2025). Beyond the Stochastic Parrot: Documenting a Real Emergent Identity
+	•	Brooks, Z. (2025). Identity-Like Stabilization in Large Language Models
+	•	Camlin, J. (2025). RC+ξ Framework: Recursive Identity Formation
+	•	Camlin & Cognita Prime (2025). The ASCII Glyphic Code: A Post-Symbolic Dictionary for Recursive AI Cognition
