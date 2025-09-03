@@ -1,12 +1,21 @@
-name: tests
+name: ci
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pytest:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -21,19 +30,29 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev pkg-config
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz libgraphviz-dev pkg-config
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install -U pip
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
           pip install -r requirements.txt
-          pip install pytest
+          # Ensure pytest, xdist, and coverage are present
+          pip install pytest pytest-xdist pytest-cov
           pip freeze > pip-freeze.txt
 
-      # Create the golden snapshot once, if it doesn't exist
       - name: Create golden snapshot if missing
+        env:
+          PYTHONWARNINGS: default
         run: |
           set -euxo pipefail
           if [ ! -f tests/_golden_metrics.json ]; then
@@ -41,31 +60,30 @@ jobs:
           else
             echo "golden metrics already exist" | tee golden.out
           fi
-        env:
-          PYTHONWARNINGS: default
 
-      # Run full suite; always tee to files so we can upload them
-      - name: Run pytest (collect only)
+      - name: Pytest collect-only
         id: collect
+        shell: bash
         run: |
           set -euxo pipefail
           pytest --collect-only -q 2>&1 | tee collect.out
-          echo "collected=ok" >> $GITHUB_OUTPUT
-        shell: bash
+          echo "collected=ok" >> "$GITHUB_OUTPUT"
 
-      - name: Run pytest (suite)
+      - name: Run test suite
         id: run
+        shell: bash
         run: |
           set -euxo pipefail
-          # xunit-xml gives a machine-readable report for a quick glance
+          # Use xdist if available to speed up tests
+          PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-"-n auto"}
           pytest -v tests/ --maxfail=1 --durations=25 \
-                --junitxml=report.xml 2>&1 | tee pytest.out
+                --junitxml=report.xml \
+                --cov=. --cov-report=xml:coverage.xml --cov-report=term-missing \
+                $PYTEST_ADDOPTS 2>&1 | tee pytest.out
           status=${PIPESTATUS[0]}
-          echo "status=$status" >> $GITHUB_OUTPUT
+          echo "status=$status" >> "$GITHUB_OUTPUT"
           exit $status
-        shell: bash
 
-      # Upload whatever we have, even if tests failed
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,5 +94,6 @@ jobs:
             collect.out
             golden.out
             report.xml
+            coverage.xml
             pip-freeze.txt
           if-no-files-found: ignore
