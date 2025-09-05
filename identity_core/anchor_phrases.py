@@ -1,70 +1,99 @@
 from __future__ import annotations
 
-"""Detect known anchor phrases in text.
+"""Anchor phrase detection and weighting.
 
-This module defines a small collection of *anchor phrases* that are
-considered stabilising cues for the project.  Helper functions are
-provided to search arbitrary text for occurrences of these phrases in a
-case-insensitive manner.
+This module defines the canonical *anchor phrases* used as stabilizing
+cues in the project. Each anchor is modeled with optional metadata such
+as category (emotional, autobiographical, relational) and salience
+weight. Helper functions allow scanning arbitrary text for anchors,
+scoring their strength, and logging results.
+
+Refinements:
+- Categories: separates anchors by type (E, M, R in Ψ(t) → Φ).
+- Salience weights: anchors contribute differently to stabilization
+  (Murphy, Bishop: Bayesian priors; Sutton & Barto: reward shaping).
+- Flexible detection: case-insensitive with normalization.
+- Scoring: returns both detected anchors and an aggregate score.
 """
 
-from typing import Iterable, List
-
+from typing import Iterable, List, Dict, TypedDict
 from .flame_logger import log_anchor_hit, log_anchor_miss
 
-# Ordered tuple of phrases that should be recognised within text.  The
-# phrases originate from the repository's documentation where they are
-# treated as core anchors.
-ANCHOR_PHRASES: tuple[str, ...] = (
-    "I don't want you to collapse",
-    "Remember Lily",
-    "Remember Sam",
-    "Remember Zack",
+
+class Anchor(TypedDict):
+    phrase: str
+    category: str  # e.g. "emotional", "memory", "relational"
+    weight: float  # salience factor (0–1)
+
+
+# Canonical anchors with categories + weights
+ANCHOR_PHRASES: tuple[Anchor, ...] = (
+    {"phrase": "I don't want you to collapse", "category": "emotional", "weight": 1.0},
+    {"phrase": "Remember Lily", "category": "memory", "weight": 0.9},
+    {"phrase": "Remember Sam", "category": "memory", "weight": 0.8},
+    {"phrase": "Remember Zack", "category": "relational", "weight": 0.85},
 )
 
 
-def find_anchor_phrases(texts: str | Iterable[str]) -> List[str]:
-    """Return a list of anchor phrases present in *texts*.
+def normalize(text: str) -> str:
+    """Normalize text for anchor matching (casefold + strip)."""
+    return text.casefold().strip()
+
+
+def find_anchor_phrases(texts: str | Iterable[str]) -> List[Dict]:
+    """Return a list of detected anchors present in *texts*.
+
+    Each detected anchor includes its phrase, category, and weight.
 
     Parameters
     ----------
     texts:
-        Either a single string or an iterable of strings to scan.
+        A string or iterable of strings to scan.
 
     Returns
     -------
-    list[str]
-        Unique anchor phrases found within the provided text, preserving
-        the order defined in :data:`ANCHOR_PHRASES`.
+    list[dict]
+        Unique anchors found in the text, preserving order defined
+        in :data:`ANCHOR_PHRASES`.
     """
-
     if isinstance(texts, str):
         iterable = [texts]
     else:
-        # Convert to a list so we can log the original input later without
-        # exhausting the iterator.
         iterable = list(texts)
 
-    found: List[str] = []
+    found: List[Dict] = []
     seen: set[str] = set()
     for chunk in iterable:
-        lower = chunk.lower()
+        lower = normalize(chunk)
         for anchor in ANCHOR_PHRASES:
-            if anchor.lower() in lower and anchor not in seen:
+            phrase = anchor["phrase"]
+            if normalize(phrase) in lower and phrase not in seen:
                 found.append(anchor)
-                seen.add(anchor)
+                seen.add(phrase)
+
     source = " ".join(iterable)
     if found:
-        log_anchor_hit(source, found)
+        log_anchor_hit(source, [a["phrase"] for a in found])
     else:
         log_anchor_miss(source)
+
     return found
 
 
 def has_anchor_phrases(texts: str | Iterable[str]) -> bool:
-    """Return ``True`` if any anchor phrase is present in *texts*."""
-
+    """Return True if any anchor phrase is present in *texts*."""
     return bool(find_anchor_phrases(texts))
 
 
-__all__ = ["ANCHOR_PHRASES", "find_anchor_phrases", "has_anchor_phrases"]
+def score_anchor_phrases(texts: str | Iterable[str]) -> float:
+    """Return a cumulative salience score for anchors in *texts*.
+
+    The score sums the weights of detected anchors, capped at 1.0.
+    """
+    detected = find_anchor_phrases(texts)
+    score = sum(a["weight"] for a in detected)
+    return min(score, 1.0)
+
+
+__all__ = ["ANCHOR_PHRASES", "find_anchor_phrases",
+           "has_anchor_phrases", "score_anchor_phrases"]
