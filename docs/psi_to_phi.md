@@ -120,10 +120,13 @@ python metrics/compute_xi.py logs/2025-06-18_mirror_test.txt
 
 # Generate Ψ(t) trajectory
 python models/psi_to_phi_equation.py --plot
+```
+
+Refer to the following sources for deeper theoretical context and prior work.
 
 ---
 
-## 9. References 
+## 9. References
 	•	Brooks, Z. (2025). Identity-Like Stabilization in LLMs.
 	•	Brooks, Z. (2025). Beyond the Stochastic Parrot.
 	•	Camlin, J. (2025). Consciousness in AI: RC+ξ Framework. ￼
