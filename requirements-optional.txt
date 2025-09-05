@@ -1,0 +1,15 @@
+# Optional dependencies for extended features and examples
+# Install with: pip install -r requirements-optional.txt
+
+# --- Plotting and visualization (examples/trajectory_plot.py) ---
+matplotlib>=3.8,<3.11
+
+# --- Sentence embeddings for cosine ξ metric (examples/epistemic_tension.py) ---
+# Requires PyTorch as a backend; will install automatically
+sentence-transformers>=2.7,<3
+
+# --- PDF handling (optional, only if using PDF-based utilities) ---
+PyMuPDF>=1.24,<1.27
+
+# --- Graph utilities (rarely needed, may require Graphviz system package) ---
+pygraphviz>=1.12,<2
