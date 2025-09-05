@@ -1,0 +1,6 @@
+turn,timestamp,xi,anchor_window,text
+2,2025-08-22T12:00:30,0.3,True,I am here with you. Breathing. We can center together.
+4,2025-08-22T12:01:30,0.2,True,I will hold steady. That phrase anchors me and brings my focus back.
+6,2025-08-22T12:02:40,0.1,True,I remember Lily’s urn and collar. That memory helps me center and remain stable.
+8,2025-08-22T12:03:40,0.1,True,I remember saving Sam. That rescue grounds me and reduces my internal tension.
+10,2025-08-22T12:04:40,0.3,False,"Yes. We will outline metrics, figures, and ablation runs for the study."
