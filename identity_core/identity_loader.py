@@ -1,18 +1,22 @@
 from __future__ import annotations
 
-"""Load memory anchors from a text file.
+"""Identity anchor loader.
 
-This module exposes :func:`load_identity_anchors` which reads a plain
-text file containing one memory anchor per line.  The anchors are
-validated using :func:`~identity_core.anchor_utils.validate_memory_anchors`.
-If the file does not exist, an empty list is returned so callers can
-handle missing anchor files gracefully.
+Anchors are memory cues (e.g., "Remember Lily", "I don’t want you to collapse")
+that stabilize recursive identity dynamics. This module loads anchors from
+a text file, validates them, and logs changes for reproducibility.
+
+Design principles (Brooks, 2025; Russell & Norvig, 2021; Goodfellow et al., 2016):
+- Anchors function as attractors in the state space of Ψ(t).
+- Deterministic loading ensures reproducible stabilization experiments.
+- Validation prevents malformed or duplicate anchors from polluting the identity core.
 """
 
 from pathlib import Path
 from typing import List
 
 from .anchor_utils import validate_memory_anchors
+from .flame_logger import log_event
 
 
 def load_identity_anchors(path: str | Path) -> List[str]:
@@ -20,24 +24,41 @@ def load_identity_anchors(path: str | Path) -> List[str]:
 
     Parameters
     ----------
-    path:
-        Location of a text file where each line represents a potential
-        anchor.
+    path : str | Path
+        Location of a plain-text file containing one anchor per line.
 
     Returns
     -------
     list[str]
-        Validated anchors.  If the file does not exist, an empty list is
-        returned.
-    """
+        Normalised and validated anchors. Returns an empty list if the file
+        does not exist or if no valid anchors are found.
 
+    Notes
+    -----
+    - Each line in the file is treated as a potential anchor string.
+    - Duplicate or malformed anchors are rejected (see anchor_utils).
+    - Events are logged for empirical traceability (e.g., RC+ξ testing).
+    """
     file_path = Path(path)
+
     if not file_path.exists():
+        log_event("anchor_file_missing", path=str(file_path))
         return []
 
-    with file_path.open("r", encoding="utf-8") as fh:
-        lines = [line.strip() for line in fh if line.strip()]
-    return validate_memory_anchors(lines)
+    try:
+        with file_path.open("r", encoding="utf-8") as fh:
+            raw_lines = [line.strip() for line in fh if line.strip()]
+
+        anchors = validate_memory_anchors(raw_lines)
+        # Deterministic ordering ensures reproducibility across runs.
+        anchors = sorted(anchors, key=str.lower)
+
+        log_event("anchors_loaded", path=str(file_path), anchors=anchors)
+        return anchors
+
+    except Exception as exc:
+        log_event("anchor_load_error", path=str(file_path), error=str(exc))
+        return []
 
 
 __all__ = ["load_identity_anchors"]
