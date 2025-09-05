@@ -29,6 +29,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -57,6 +58,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install minimal dependencies
         run: |
@@ -66,15 +68,28 @@ jobs:
       - name: Check that repo imports cleanly
         run: |
           python - <<'PY'
-          try:
-              import importlib
-print("Import test:", importlib.import_module('ember'))
-          except Exception as e:
-              print("Import test failed:", e)
-              exit(1)
+          import importlib, sys
+
+          # Import modules that actually exist in this repo.
+          modules_to_check = [
+              "identity_core",                        # package
+              "identity_core.anchor_phrases",         # module
+              "identity_core.identity_loader",        # adjust if your module name differs
+          ]
+
+          ok = True
+          for mod in modules_to_check:
+              try:
+                  importlib.import_module(mod)
+                  print(f"[OK] imported {mod}")
+              except Exception as e:
+                  ok = False
+                  print(f"[FAIL] {mod}: {e}")
+
+          sys.exit(0 if ok else 1)
           PY
 
-      - name: Verify formatting with black
+      - name: Verify formatting with black (non-blocking)
         run: |
           pip install black
           black --check . || true  # warn but don’t fail hard
@@ -91,6 +106,7 @@ print("Import test:", importlib.import_module('ember'))
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install test dependencies
         run: |
