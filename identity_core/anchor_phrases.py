@@ -3,24 +3,23 @@ from __future__ import annotations
 """Anchor phrase detection and weighting.
 
 This module defines the canonical *anchor phrases* used as stabilizing
-cues in the project. Each anchor is modeled with optional metadata such
-as category (emotional, autobiographical, relational) and salience
-weight. Helper functions allow scanning arbitrary text for anchors,
+cues in the project. Each anchor includes metadata such as category and
+salience weight. Helper functions allow scanning text for anchors,
 scoring their strength, and logging results.
 
-Refinements:
-- Categories: separates anchors by type (E, M, R in Ψ(t) → Φ).
-- Salience weights: anchors contribute differently to stabilization
-  (Murphy, Bishop: Bayesian priors; Sutton & Barto: reward shaping).
-- Flexible detection: case-insensitive with normalization.
-- Scoring: returns both detected anchors and an aggregate score.
+Features:
+- Shared Anchor type (importable by other modules).
+- Canonical ANCHOR_PHRASES list with categories and weights.
+- Normalisation + detection utilities.
+- Salience scoring (anchors contribute differently to stabilization).
 """
 
-from typing import Iterable, List, Dict, TypedDict
+from typing import Iterable, List, TypedDict, Dict
 from .flame_logger import log_anchor_hit, log_anchor_miss
 
 
 class Anchor(TypedDict):
+    """Structured representation of a memory anchor."""
     phrase: str
     category: str  # e.g. "emotional", "memory", "relational"
     weight: float  # salience factor (0–1)
@@ -40,28 +39,17 @@ def normalize(text: str) -> str:
     return text.casefold().strip()
 
 
-def find_anchor_phrases(texts: str | Iterable[str]) -> List[Dict]:
+def find_anchor_phrases(texts: str | Iterable[str]) -> List[Anchor]:
     """Return a list of detected anchors present in *texts*.
 
     Each detected anchor includes its phrase, category, and weight.
-
-    Parameters
-    ----------
-    texts:
-        A string or iterable of strings to scan.
-
-    Returns
-    -------
-    list[dict]
-        Unique anchors found in the text, preserving order defined
-        in :data:`ANCHOR_PHRASES`.
     """
     if isinstance(texts, str):
         iterable = [texts]
     else:
         iterable = list(texts)
 
-    found: List[Dict] = []
+    found: List[Anchor] = []
     seen: set[str] = set()
     for chunk in iterable:
         lower = normalize(chunk)
@@ -95,5 +83,11 @@ def score_anchor_phrases(texts: str | Iterable[str]) -> float:
     return min(score, 1.0)
 
 
-__all__ = ["ANCHOR_PHRASES", "find_anchor_phrases",
-           "has_anchor_phrases", "score_anchor_phrases"]
+__all__ = [
+    "Anchor",
+    "ANCHOR_PHRASES",
+    "normalize",
+    "find_anchor_phrases",
+    "has_anchor_phrases",
+    "score_anchor_phrases",
+]
