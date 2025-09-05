@@ -4,21 +4,23 @@ from __future__ import annotations
 
 This module provides helper functions to validate and normalise *memory
 anchors*. Anchors are stabilising cues for identity persistence and
-autobiographical recall. Validation ensures anchors are usable by
-downstream code and conform to basic structural rules.
+autobiographical recall.
 
-Refinements:
-- Metadata-aware: allows anchors to carry weights/categories.
-- Normalisation: strips whitespace, collapses internal spacing, casefolds.
-- Security checks: prevent injection-like input (newline, control chars).
-- Logging: flame_logger tracks validation passes/fails and changes.
-- Scoring: optional function to assign cumulative salience weight.
+Shared Anchor type is imported from `anchor_phrases.py` so metadata
+(phrase, category, weight) is consistent across the identity_core package.
+
+Features:
+- Anchor normalization (casefold + spacing cleanup).
+- Structural validation (non-empty, no control chars, no duplicates).
+- Scoring utility (sums weights, capped at 1.0).
+- Logging: flame_logger tracks memory validation passes/fails.
 """
 
 import re
-from typing import Iterable, List, Dict, Any
+from typing import Iterable, List
 
 from .flame_logger import log_event, log_memory_change
+from .anchor_phrases import Anchor  # shared type: phrase/category/weight
 
 
 def normalize_anchor(anchor: str) -> str:
@@ -37,7 +39,7 @@ def validate_memory_anchor(anchor: str) -> str:
     Returns
     -------
     str
-        The normalised anchor string.
+        The validated anchor string.
 
     Raises
     ------
@@ -46,7 +48,6 @@ def validate_memory_anchor(anchor: str) -> str:
     ValueError
         If the anchor is empty, contains disallowed characters, or is unsafe.
     """
-
     if not isinstance(anchor, str):
         raise TypeError("anchor must be a string")
 
@@ -54,11 +55,9 @@ def validate_memory_anchor(anchor: str) -> str:
     if not stripped:
         raise ValueError("anchor must be a non-empty string")
 
-    # Disallow newlines and control characters (safety check)
     if any(c in stripped for c in ("\n", "\r", "\t")):
         raise ValueError("anchor must not contain control characters")
 
-    # Could extend here with regex checks for injections or invalid tokens
     return stripped
 
 
@@ -102,13 +101,13 @@ def validate_memory_anchors(anchors: Iterable[str]) -> List[str]:
     return normalised
 
 
-def score_memory_anchors(anchors: Iterable[Dict[str, Any]]) -> float:
+def score_memory_anchors(anchors: Iterable[Anchor]) -> float:
     """Compute a cumulative salience score from weighted anchors.
 
     Parameters
     ----------
-    anchors : Iterable[dict]
-        Anchors with optional "weight" metadata (float 0–1).
+    anchors : Iterable[Anchor]
+        Anchors as dicts with "phrase", "category", "weight".
 
     Returns
     -------
@@ -117,14 +116,13 @@ def score_memory_anchors(anchors: Iterable[Dict[str, Any]]) -> float:
     """
     score = 0.0
     for anchor in anchors:
-        if isinstance(anchor, dict) and "weight" in anchor:
-            score += float(anchor["weight"])
+        score += float(anchor.get("weight", 0.0))
     return min(score, 1.0)
 
 
 __all__ = [
+    "normalize_anchor",
     "validate_memory_anchor",
     "validate_memory_anchors",
     "score_memory_anchors",
-    "normalize_anchor",
 ]
