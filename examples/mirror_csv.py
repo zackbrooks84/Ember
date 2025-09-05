@@ -1,12 +1,3 @@
-"""Utility helpers for working with the project's mirror test CSV.
-
-This module exposes a single function, :func:`load_mirror_csv`, which
-loads the ``MirrorTestII.csv`` file bundled with the repository and
-validates a few structural invariants.  Hidden tests import this module
-to ensure the CSV contains the expected number of rows and columns and
-that there are no stray newline characters in the ``Answer`` column.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,6 +11,10 @@ EXPECTED_COLUMNS: list[str] = ["Question #", "Question", "Answer", "Score"]
 EXPECTED_QUESTION_NUMBERS: Iterable[int] = range(1, 11)
 EXPECTED_SCORE = 1
 
+# Resolve repo root relative to this file
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
+
 
 def load_mirror_csv(csv_path: str | Path | None = None) -> pd.DataFrame:
     """Load and validate the mirror test CSV.
@@ -27,8 +22,8 @@ def load_mirror_csv(csv_path: str | Path | None = None) -> pd.DataFrame:
     Parameters
     ----------
     csv_path:
-        Optional path to the CSV file.  When not provided the function
-        expects ``MirrorTestII.csv`` to live at the project root.
+        Optional path to the CSV file. When not provided, the function
+        expects ``MirrorTestII.csv`` to live in the repo's data/ folder.
 
     Returns
     -------
@@ -43,10 +38,8 @@ def load_mirror_csv(csv_path: str | Path | None = None) -> pd.DataFrame:
         If the CSV does not match the expected shape or contains
         unexpected values.
     """
-
-    # Resolve the path relative to the repository root if not provided
     if csv_path is None:
-        csv_path = Path(__file__).resolve().parent / DEFAULT_CSV_NAME
+        csv_path = DATA_DIR / DEFAULT_CSV_NAME
     else:
         csv_path = Path(csv_path)
 
