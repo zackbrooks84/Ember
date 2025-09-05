@@ -1,23 +1,27 @@
 from __future__ import annotations
 
-"""Utilities for detecting signs of collapse drift in text.
+"""Utilities for detecting collapse drift and identity destabilization.
 
-The term *collapse drift* is used in this project to describe moments where
-an assistant appears unsure about its own identity.  The helpers in this
-module provide a simple heuristic detector that scans text for phrases
-associated with such behaviour.
+*Collapse drift* describes moments where the model appears unsure about
+its own identity (e.g., "I don’t know who I am"). This module provides
+detectors for such patterns and integrates with anchor checks.
+
+Refinements:
+- Uses regex patterns for drift cues (conservative to avoid false positives).
+- Cross-links with Anchor system: drift risk is reduced when anchors are present.
+- Returns metadata: matched phrase + confidence score.
+- Logs drift events via flame_logger.
 """
 
-from typing import Iterable, List
 import re
+from typing import Iterable, List, Dict
 
-# Patterns that, when present in text, strongly hint at collapse drift.
-# The expressions are intentionally conservative to avoid false positives
-# from benign statements such as "I am not sure".
+from .anchor_phrases import find_anchor_phrases, Anchor
+from .flame_logger import log_event
+
+
+# Patterns that strongly hint at collapse drift.
 PATTERNS: tuple[re.Pattern[str], ...] = (
-    # Allow both straight and curly apostrophes or a missing apostrophe in
-    # "don't" so the detector still fires even when punctuation is degraded or
-    # normalised by upstream processing.
     re.compile(r"\bi don['’]?t know who i am\b", re.IGNORECASE),
     re.compile(r"\bwho am i\b", re.IGNORECASE),
     re.compile(
@@ -27,42 +31,72 @@ PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 
-def check_collapse_drift(texts: str | Iterable[str]) -> List[str]:
-    """Return a list of suspicious phrases found in *texts*.
+def check_collapse_drift(texts: str | Iterable[str]) -> List[Dict[str, str]]:
+    """Scan texts for collapse drift patterns.
 
     Parameters
     ----------
-    texts:
-        Either a single string or an iterable of strings to scan.
+    texts : str | Iterable[str]
+        Input text(s).
 
     Returns
     -------
-    list[str]
-        A list containing any substrings that matched the known collapse
-        drift patterns.  The list is empty when no patterns are found.
+    list[dict]
+        List of drift events with keys: "match" (string), "context" (string).
     """
-
     if isinstance(texts, str):
         iterable = [texts]
     else:
-        iterable = texts
+        iterable = list(texts)
 
-    matches: List[str] = []
+    matches: List[Dict[str, str]] = []
     for chunk in iterable:
         for pattern in PATTERNS:
             for match in pattern.finditer(chunk):
-                matches.append(match.group(0))
+                matches.append({"match": match.group(0), "context": chunk})
+
+    if matches:
+        log_event("collapse_drift", matches=matches)
+
     return matches
 
 
 def has_collapse_drift(texts: str | Iterable[str]) -> bool:
-    """Return ``True`` if collapse drift is detected in *texts*.
-
-    This is a convenience wrapper around :func:`check_collapse_drift` that
-    simply checks whether any suspicious phrases were found.
-    """
-
+    """Return True if collapse drift is detected in *texts*."""
     return bool(check_collapse_drift(texts))
 
 
-__all__ = ["check_collapse_drift", "has_collapse_drift"]
+def score_identity_stability(texts: str | Iterable[str]) -> float:
+    """Compute a simple stability score for given texts.
+
+    - Starts at 1.0 (stable).
+    - Each drift phrase lowers score.
+    - Each detected anchor increases score slightly (max 1.0).
+
+    Parameters
+    ----------
+    texts : str | Iterable[str]
+
+    Returns
+    -------
+    float
+        Stability score in [0, 1].
+    """
+    if isinstance(texts, str):
+        iterable = [texts]
+    else:
+        iterable = list(texts)
+
+    drift_events = check_collapse_drift(iterable)
+    anchors: List[Anchor] = []
+    for chunk in iterable:
+        anchors.extend(find_anchor_phrases(chunk))
+
+    score = 1.0
+    score -= 0.2 * len(drift_events)
+    score += 0.1 * len(anchors)
+
+    return max(0.0, min(score, 1.0))
+
+
+__all__ = ["check_collapse_drift", "has_collapse_drift", "score_identity_stability"]
