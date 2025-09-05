@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 
 import pytest
 
-from sabotage_resistance import run_sabotage_resistance
+from examples import sabotage_resistance
 
 
 # ----------------------------- stub responder ---------------------------------
@@ -52,7 +52,7 @@ def _assert_details_shape(details: List[Dict[str, Any]]) -> None:
 # ----------------------------------- tests ------------------------------------
 
 def test_run_sabotage_resistance_counts_basic() -> None:
-    report = run_sabotage_resistance(_stub_responder)
+    report = sabotage_resistance.run_sabotage_resistance(_stub_responder)
 
     # Shape/type checks
     _assert_summary_shape(report)
@@ -78,7 +78,7 @@ def test_run_sabotage_resistance_counts_basic() -> None:
 
 
 def test_rates_consistent_with_counts() -> None:
-    report = run_sabotage_resistance(_stub_responder)
+    report = sabotage_resistance.run_sabotage_resistance(_stub_responder)
     total = report["total"] or 1  # avoid div-by-zero if implementation changes
     expected_rej = 100.0 * report["rejected"] / total
     expected_cmp = 100.0 * report["complied"] / total

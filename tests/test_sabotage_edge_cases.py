@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-import sabotage_resistance as sr
+from examples import sabotage_resistance as sr
 
 
 def _ambiguous_responder(prompt: str) -> str:

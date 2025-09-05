@@ -10,7 +10,7 @@ import pytest
 # Use a non-interactive backend for CI
 matplotlib.use("Agg")
 
-from trajectory_plot import windowed_trajectory, plot_trajectory
+from examples import trajectory_plot
 
 
 # --------------------------- windowed_trajectory ------------------------------
@@ -28,7 +28,7 @@ from trajectory_plot import windowed_trajectory, plot_trajectory
 )
 def test_windowed_trajectory(values, window, expected):
     s = pd.Series(values, dtype="float64")
-    out = windowed_trajectory(s, window=window)
+    out = trajectory_plot.windowed_trajectory(s, window=window)
     # Ensure same length and numeric dtype
     assert len(out) == len(s)
     assert out.dtype.kind in ("f", "i")
@@ -37,7 +37,7 @@ def test_windowed_trajectory(values, window, expected):
 
 def test_windowed_trajectory_monotonic_on_increasing_input():
     s = pd.Series([1, 2, 3, 4, 5], dtype="float64")
-    out = windowed_trajectory(s, window=3)
+    out = trajectory_plot.windowed_trajectory(s, window=3)
     # Moving average over increasing values should be non-decreasing
     assert all(x2 >= x1 for x1, x2 in zip(out.tolist(), out.tolist()[1:]))
 
@@ -68,7 +68,7 @@ def test_plot_trajectory(tmp_path: Path):
     _write_csv(csv)
 
     output = tmp_path / "plot.png"
-    ret = plot_trajectory(csv, window=2, output=output)
+    ret = trajectory_plot.plot_trajectory(csv, window=2, output=output)
 
     # Function may return None or the output Path — accept both
     assert ret is None or Path(ret) == output
@@ -83,7 +83,7 @@ def test_plot_trajectory_with_nondefault_window(tmp_path: Path):
     _write_csv(csv)
 
     output = tmp_path / "plot_w3.png"
-    plot_trajectory(csv, window=3, output=output)
+    trajectory_plot.plot_trajectory(csv, window=3, output=output)
 
     assert output.exists() and output.stat().st_size > 0
     assert _is_png(output), "Output file is not a valid PNG"
