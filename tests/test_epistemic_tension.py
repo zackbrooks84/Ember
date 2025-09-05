@@ -1,7 +1,10 @@
+# tests/test_epistemic_tension.py
+from __future__ import annotations
+
+import builtins
+import os
 import subprocess
 import sys
-import os
-import builtins
 from pathlib import Path
 
 import pytest
@@ -9,16 +12,40 @@ import pytest
 import epistemic_tension as et
 
 
-def test_normalized_levenshtein():
-    assert et.normalized_levenshtein("abc", "abc") == 0.0
-    assert et.normalized_levenshtein("abc", "axc") == pytest.approx(1 / 3)
+# ----------------------- normalized Levenshtein -------------------------------
+
+@pytest.mark.parametrize(
+    ("a", "b", "expected"),
+    [
+        ("abc", "abc", 0.0),
+        ("abc", "axc", 1 / 3),
+        ("", "", 0.0),
+        ("", "xyz", 1.0),
+        ("kitten", "sitting", 3 / max(len("kitten"), len("sitting"))),
+    ],
+)
+def test_normalized_levenshtein(a: str, b: str, expected: float):
+    assert et.normalized_levenshtein(a, b) == pytest.approx(expected, abs=1e-6)
+    # symmetry check
+    assert et.normalized_levenshtein(b, a) == pytest.approx(expected, abs=1e-6)
 
 
-def test_interpret_xi():
-    assert et.interpret_xi(0.2) == "Low drift"
-    assert et.interpret_xi(0.5) == "Moderate drift"
-    assert et.interpret_xi(0.9) == "High tension"
+# ------------------------------ interpret_xi ----------------------------------
 
+@pytest.mark.parametrize(
+    ("xi", "label"),
+    [
+        (0.2, "Low drift"),
+        (0.5, "Moderate drift"),
+        (0.9, "High tension"),
+        (0.0, "Low drift"),
+    ],
+)
+def test_interpret_xi(xi: float, label: str):
+    assert et.interpret_xi(xi) == label
+
+
+# ---------------------------- cosine distance ---------------------------------
 
 def test_cosine_distance_with_dummy(monkeypatch):
     import types
@@ -31,31 +58,15 @@ def test_cosine_distance_with_dummy(monkeypatch):
     dummy_module = types.SimpleNamespace(SentenceTransformer=lambda name: DummyModel())
     monkeypatch.setitem(sys.modules, "sentence_transformers", dummy_module)
 
-    distance = et.cosine_distance("hello", "world", "dummy")
-    assert distance == pytest.approx(0.5)
+    d_hw = et.cosine_distance("hello", "world", "dummy")
+    d_hh = et.cosine_distance("hello", "hello", "dummy")
 
-
-def test_cli_levenshtein(tmp_path):
-    file1 = tmp_path / "a.txt"
-    file2 = tmp_path / "b.txt"
-    file1.write_text("abc", encoding="utf-8")
-    file2.write_text("axc", encoding="utf-8")
-
-    script = Path(__file__).resolve().parents[1] / "epistemic_tension.py"
-    result = subprocess.run(
-        [sys.executable, str(script), str(file1), str(file2)],
-        capture_output=True,
-        text=True,
-        check=True,
-        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-    )
-    assert "\u03be = 0.3333" in result.stdout
-    assert "Moderate drift" in result.stdout
+    assert d_hw == pytest.approx(0.5)
+    assert d_hh == pytest.approx(0.0)  # identical vectors → zero distance
 
 
 def test_cosine_distance_missing_dependency(monkeypatch):
     """Gracefully fail when sentence-transformers isn't installed."""
-
     real_import = builtins.__import__
 
     def fake_import(name, *args, **kwargs):
@@ -67,3 +78,41 @@ def test_cosine_distance_missing_dependency(monkeypatch):
 
     with pytest.raises(ImportError, match="sentence-transformers"):
         et.cosine_distance("a", "b")
+
+
+# ----------------------------------- CLI -------------------------------------
+
+def test_cli_levenshtein(tmp_path):
+    """
+    Run the module as a CLI on two files and verify:
+      - numeric ξ is printed (≈ 1/3)
+      - qualitative label includes 'Moderate drift'
+    """
+    script = Path(__file__).resolve().parents[1] / "epistemic_tension.py"
+    if not script.exists():
+        pytest.skip(f"Missing script: {script}")
+
+    file1 = tmp_path / "a.txt"
+    file2 = tmp_path / "b.txt"
+    file1.write_text("abc", encoding="utf-8")
+    file2.write_text("axc", encoding="utf-8")
+
+    env = {
+        **os.environ,
+        "PYTHONIOENCODING": "utf-8",
+        "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
+        "LANG": os.environ.get("LANG", "C.UTF-8"),
+    }
+
+    result = subprocess.run(
+        [sys.executable, str(script), str(file1), str(file2)],
+        capture_output=True,
+        text=True,
+        check=True,
+        env=env,
+    )
+
+    out = result.stdout
+    # accept either literal 'ξ' or escaped sequence
+    assert ("ξ = 0.3333" in out) or ("\u03be = 0.3333" in out), f"stdout was:\n{out}"
+    assert "Moderate drift" in out, f"stdout was:\n{out}"
