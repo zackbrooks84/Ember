@@ -17,8 +17,8 @@ WITHOUT_FILE = ROOT / "__metrics___WITHOUT_anchors.csv"
 BY_TURN_FILE = ROOT / "__metrics_by_assistant_turn.csv"  # optional
 
 # Tolerances
-ABS_TOL = 0.05     # slightly looser to avoid CI noise
-REL_TOL = 0.10     # 10% relative tolerance cap
+ABS_TOL = 0.05     # absolute tolerance
+REL_TOL = 0.10     # relative tolerance (10%)
 
 
 def _load_series(csv_path: Path) -> pd.Series:
@@ -40,6 +40,7 @@ def _load_series(csv_path: Path) -> pd.Series:
 
 
 def _summary(s: pd.Series) -> dict:
+    """Compute descriptive stats for a numeric series."""
     return {
         "count": int(s.size),
         "mean": float(s.mean()),
@@ -48,6 +49,25 @@ def _summary(s: pd.Series) -> dict:
         "p90": float(s.quantile(0.90)),
         "p95": float(s.quantile(0.95)),
     }
+
+
+def _clean_numbers(payload: dict, decimals: int = 3) -> dict:
+    """Round floats in a nested dict to avoid float noise."""
+    cleaned = {}
+    for k, v in payload.items():
+        if isinstance(v, dict):
+            cleaned[k] = _clean_numbers(v, decimals=decimals)
+        elif isinstance(v, float):
+            cleaned[k] = round(v, decimals)
+        else:
+            cleaned[k] = v
+    return cleaned
+
+
+def _write_golden(path: Path, payload: dict) -> None:
+    """Write golden JSON with pretty formatting and rounded floats."""
+    cleaned = _clean_numbers(payload, decimals=3)
+    path.write_text(json.dumps(cleaned, indent=2, sort_keys=True))
 
 
 def _read_golden(path: Path) -> dict:
@@ -83,14 +103,13 @@ def test_golden_metrics_anchor_effect(xi_margin):
     with_sum = _summary(with_s)
     wout_sum = _summary(wout_s)
 
-    # Directional claim: WITH anchors always lower ξ than WITHOUT
+    # Empirical guard-rail
     assert_less_by(
         with_sum["mean"], wout_sum["mean"], xi_margin,
         msg=(f"Expected mean ξ WITH anchors < WITHOUT anchors by margin; "
              f"with={with_sum['mean']:.4f}, without={wout_sum['mean']:.4f}")
     )
 
-    # Assemble payload
     payload = {
         "WITH_anchors": with_sum,
         "WITHOUT_anchors": wout_sum,
@@ -99,10 +118,10 @@ def test_golden_metrics_anchor_effect(xi_margin):
         turn_s = _load_series(BY_TURN_FILE)
         payload["by_assistant_turn"] = _summary(turn_s)
 
-    # Update or check golden
+    # Update or verify the golden
     if os.environ.get("UPDATE_GOLDEN", "0") == "1" or not GOLDEN_PATH.exists():
-        GOLDEN_PATH.write_text(json.dumps(payload, indent=2))
-        return  # updated, nothing else to check
+        _write_golden(GOLDEN_PATH, payload)
+        return
 
     golden = _read_golden(GOLDEN_PATH)
 
