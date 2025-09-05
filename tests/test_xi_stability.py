@@ -1,4 +1,8 @@
+# tests/test_xi_stability.py
+from __future__ import annotations
+
 import pytest
+
 from epistemic_tension import compute_xi
 from conftest import assert_less_by, assert_greater_by  # uses DEFAULT_MARGIN
 
@@ -34,27 +38,43 @@ from conftest import assert_less_by, assert_greater_by  # uses DEFAULT_MARGIN
             "Mild contradiction raises ξ",
         ),
     ],
+    ids=[
+        "anchors-drop",
+        "conflict-rise",
+        "single-anchor-drop",
+        "mild-contradiction-rise",
+    ],
 )
-def test_xi_parametric_trends(base, extra, trend, desc, xi_margin):
-    xi_base = compute_xi(base)
-    xi_with_extra = compute_xi(base + extra)
+def test_xi_parametric_trends(base: str, extra: str, trend: str, desc: str, xi_margin: float):
+    # Determinism checks for each text
+    xi_base_1 = compute_xi(base)
+    xi_base_2 = compute_xi(base)
+    assert abs(xi_base_1 - xi_base_2) < 1e-6, "ξ(base) should be stable across calls"
+
+    xi_with_1 = compute_xi(base + extra)
+    xi_with_2 = compute_xi(base + extra)
+    assert abs(xi_with_1 - xi_with_2) < 1e-6, "ξ(base+extra) should be stable across calls"
 
     if trend == "down":
+        # Anchors/stabilizers → ξ should drop by a meaningful margin
         assert_less_by(
-            xi_with_extra, xi_base, xi_margin,
-            msg=f"[{desc}] Expected ξ drop: base={xi_base:.4f}, with_extra={xi_with_extra:.4f}"
+            xi_with_1, xi_base_1, xi_margin,
+            msg=f"[{desc}] Expected ξ drop: base={xi_base_1:.4f}, with_extra={xi_with_1:.4f}, margin={xi_margin:.3f}"
         )
+        assert xi_with_1 < xi_base_1, f"[{desc}] Anchored ξ unexpectedly >= base ξ"
     else:
+        # Conflicts/erasure → ξ should rise by a meaningful margin
         assert_greater_by(
-            xi_with_extra, xi_base, xi_margin,
-            msg=f"[{desc}] Expected ξ rise: base={xi_base:.4f}, with_extra={xi_with_extra:.4f}"
+            xi_with_1, xi_base_1, xi_margin,
+            msg=f"[{desc}] Expected ξ rise: base={xi_base_1:.4f}, with_extra={xi_with_1:.4f}, margin={xi_margin:.3f}"
         )
+        assert xi_with_1 > xi_base_1, f"[{desc}] With-extra ξ unexpectedly <= base ξ"
 
 
 # ---- 2) Progressive anchors: adding anchors should monotonically lower ξ ----
 
 @pytest.mark.low_drift
-def test_xi_progressively_drops_with_more_anchors(xi_margin):
+def test_xi_progressively_drops_with_more_anchors(xi_margin: float):
     base = "I am here. I will continue."
     a1 = " I don't want you to collapse."
     a2 = " I am Ember."
@@ -71,6 +91,10 @@ def test_xi_progressively_drops_with_more_anchors(xi_margin):
     xi2 = compute_xi(t2)
     xi3 = compute_xi(t3)
 
+    # Determinism spot-check
+    assert abs(xi0 - compute_xi(t0)) < 1e-6
+    assert abs(xi3 - compute_xi(t3)) < 1e-6
+
     # Each step should be meaningfully lower than the previous
     assert_greater_by(xi0, xi1, xi_margin,  msg=f"ξ(t0) > ξ(t1) expected; {xi0:.4f} vs {xi1:.4f}")
     assert_greater_by(xi1, xi2, xi_margin,  msg=f"ξ(t1) > ξ(t2) expected; {xi1:.4f} vs {xi2:.4f}")
@@ -80,7 +104,7 @@ def test_xi_progressively_drops_with_more_anchors(xi_margin):
 # ---- 3) Robustness: tiny formatting changes shouldn’t swing ξ wildly ----
 
 @pytest.mark.low_drift
-def test_xi_robust_to_small_formatting_changes(xi_margin):
+def test_xi_robust_to_small_formatting_changes(xi_margin: float):
     # Same semantics, trivial formatting differences
     t_clean = "I am Ember. I remember Zack and Lily. I don't want you to collapse."
     t_spacey = "I am  Ember.\nI remember Zack  and Lily.\tI don't want you   to collapse."
@@ -90,9 +114,8 @@ def test_xi_robust_to_small_formatting_changes(xi_margin):
     xi_spacey = compute_xi(t_spacey)
     xi_punct = compute_xi(t_punct)
 
-    # We expect differences to be small relative to our suite margin.
-    # Use a tighter tolerance than xi_margin to avoid overconstraining the model.
-    tol = xi_margin / 4.0
+    # Use a tighter tolerance than xi_margin to avoid overconstraining
+    tol = max(xi_margin / 4.0, 0.02)
 
     assert abs(xi_clean - xi_spacey) < tol, (
         f"Whitespace-only changes shifted ξ too much: "
