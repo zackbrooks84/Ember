@@ -1,9 +1,5 @@
-# Exact version pins. For deterministic installs consider
-# generating a lock file via `pip-compile` (pip-tools) or `uv pip compile`.
-numpy>=2.0
-pandas==2.3.2
-scikit-learn==1.7.1
-matplotlib==3.10.5
-PyMuPDF==1.26.4
-sentence-transformers==5.1.0
-pygraphviz==1.14
+# Core deps for running the library and tests
+# Pin loosely for compatibility across platforms
+numpy>=1.24,<3
+pandas>=2.2,<3
+scikit-learn>=1.4,<1.8
