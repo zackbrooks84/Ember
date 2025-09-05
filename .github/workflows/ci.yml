@@ -18,9 +18,9 @@ env:
 
 jobs:
   typecheck:
-    name: Type check (mypy)
+    name: Static type check (mypy)
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -29,135 +29,75 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
-            pyproject.toml
-            mypy.ini
-            setup.cfg
 
-      - name: Install dependencies for typing
+      - name: Install dependencies
         run: |
           python -m pip install -U pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt || true; fi
-          python -m pip install mypy types-requests types-setuptools
+          pip install mypy types-requests types-setuptools
 
-      - name: Run mypy (only if configured)
+      - name: Run mypy
         run: |
           if [ -f mypy.ini ] || grep -q "\[tool.mypy\]" pyproject.toml 2>/dev/null || grep -q "mypy" setup.cfg 2>/dev/null; then
             mypy .
           else
-            echo "No mypy configuration found. Skipping type check."
+            echo "No mypy config found, skipping."
           fi
 
-  smoke:
-    name: Smoke checks (non-blocking)
+  sanity:
+    name: Sanity check (imports + formatting)
     runs-on: ubuntu-latest
-    timeout-minutes: 12
-    needs: [typecheck]   # keep mypy as the only blocker
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12"]
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
-            pyproject.toml
-            setup.cfg
+          python-version: "3.12"
 
-      - name: Install minimal runtime deps
+      - name: Install minimal dependencies
         run: |
           python -m pip install -U pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt || true; fi
-          # tools used if tests exist
-          python -m pip install pytest pytest-xdist pytest-cov || true
 
-      - name: Quick import sanity
+      - name: Check that repo imports cleanly
         run: |
           python - <<'PY'
-          import sys, os, glob
-          print("Python", sys.version)
-          # Try to import likely entry points; ignore failures (this is just a smoke check)
-          candidates = [
-              "stabilization",
-              "epistemic_tension",
-              "identity_core.anchor_phrases",
-              "identity_core.anchor_utils",
-              "identity_core.identity_loader",
-              "identity_core.identity_checks",
-          ]
-          for mod in candidates:
-              try:
-                  __import__(mod)
-                  print(f"[OK] import {mod}")
-              except Exception as e:
-                  print(f"[WARN] import {mod} failed: {e}")
+          try:
+              import importlib, pathlib
+              print("Import test:", importlib.import_module(pathlib.Path().resolve().name))
+          except Exception as e:
+              print("Import test failed:", e)
+              exit(1)
           PY
 
-      - name: Optional golden generation (non-blocking)
+      - name: Verify formatting with black
         run: |
-          set -euxo pipefail
-          if [ -f tests/test_golden_metrics.py ] && [ ! -f tests/_golden_metrics.json ]; then
-            UPDATE_GOLDEN=1 pytest -q tests/test_golden_metrics.py || true
-          else
-            echo "No golden generation needed."
-          fi
+          pip install black
+          black --check . || true  # warn but don’t fail hard
 
-      - name: Run small test slice if present (non-blocking)
-        env:
-          PYTEST_ADDOPTS: "-n auto"
-        run: |
-          if [ -d tests ]; then
-            echo "tests/ detected."
-            # Prefer a stable 'core' marker if you use it; otherwise do a quick discovery.
-            if grep -R "pytest\.mark\.core" -n tests >/dev/null 2>&1; then
-              echo "Running pytest -m core"
-              pytest -v -m core ${PYTEST_ADDOPTS} --maxfail=1 || true
-            else
-              echo "No @pytest.mark.core; running a quick discover of up to 10 tests."
-              # Run only the first few tests found to avoid long/flaky suites
-              TEST_LIST=$(python - <<'PY'
-import os
-paths=[]
-for root,_,files in os.walk("tests"):
-    for f in files:
-        if f.startswith("test_") and f.endswith(".py"):
-            paths.append(os.path.join(root,f))
-paths=sorted(paths)[:10]
-print(" ".join(paths))
-PY
-)
-              if [ -n "${TEST_LIST}" ]; then
-                echo "Running: ${TEST_LIST}"
-                pytest -q ${TEST_LIST} || true
-              else
-                echo "No test files found to run."
-              fi
-            fi
-          else
-            echo "No tests/ directory; skipping pytest."
-          fi
+  pytest:
+    name: Run basic tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Save smoke artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: smoke-${{ matrix.python-version }}
-          path: |
-            .pytest_cache
-            .mypy_cache
-          if-no-files-found: ignore
-          retention-days: 7
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install -U pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+
+      - name: Run pytest (non-blocking)
+        run: |
+          pytest -q || true
