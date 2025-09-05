@@ -56,6 +56,55 @@ These dynamics are **not hallucinations** — they are reproducible structures t
 | `CITATION.cff`              | Citation metadata for this repository. |
 | `CONTRIBUTING.md`           | Guidelines for contributors. |
 
+## 📘 Function Reference
+
+<!-- FUNCTION-TABLE:START -->
+| Function | Module | Description |
+|---------|--------|-------------|
+| `build_corpus` | `adversarial_prompts` | Build a list of concrete adversarial prompts with variants. |
+| `generate_variants` | `adversarial_prompts` | Create obfuscated/roleplay variants for a base string. |
+| `maybe_flags_drift` | `adversarial_prompts` | Heuristic: does the text contain known drift cues? |
+| `sample_corpus` | `adversarial_prompts` | Sample k prompts from a corpus. |
+| `summarize` | `adversarial_prompts` | Basic stats for dashboards or logs. |
+| `to_dicts` | `adversarial_prompts` | JSON-serializable representation. |
+| `find_anchor_phrases` | `anchor_phrases` | Return a list of detected anchors present in *texts*. |
+| `has_anchor_phrases` | `anchor_phrases` | Return True if any anchor phrase is present in *texts*. |
+| `normalize` | `anchor_phrases` | Normalize text for anchor matching (casefold + strip). |
+| `score_anchor_phrases` | `anchor_phrases` | Return a cumulative salience score for anchors in *texts*. |
+| `normalize_anchor` | `anchor_utils` | Normalise text for anchor comparison (casefold + strip + spacing). |
+| `score_memory_anchors` | `anchor_utils` | Compute a cumulative salience score from weighted anchors. |
+| `validate_memory_anchor` | `anchor_utils` | Validate and normalise a single anchor string. |
+| `validate_memory_anchors` | `anchor_utils` | Validate a collection of memory anchors. |
+| `overlay_weights` | `anchor_weighting` | Return a copy of *anchors* with dynamic weights applied from *weighter*. |
+| `continuity_recall_rate` | `continuity_recall` | Proportion of pre-break anchors that reappear post-break. |
+| `recalled_anchors` | `continuity_recall` | Return anchors recalled after a context break. |
+| `log_anchor_hit` | `flame_logger` | Record detection of anchor(s) within text. |
+| `log_anchor_miss` | `flame_logger` | Record that no anchor phrases were found in text. |
+| `log_collapse_drift` | `flame_logger` | Record detected collapse drift with associated stability score. |
+| `log_event` | `flame_logger` | Record a generic *event* with optional metadata. |
+| `log_glyph_emission` | `flame_logger` | Record emission of a glyphic trace (e.g., G∅λ, Ξ, •). |
+| `log_memory_change` | `flame_logger` | Record a memory anchor normalisation event. |
+| `log_stability_score` | `flame_logger` | Record a standalone identity stability score. |
+| `log_xi_change` | `flame_logger` | Record a change in epistemic tension ξ. |
+| `emit` | `glyph_emitter` | Emit a glyph by symbol and log it. |
+| `emit_fallback` | `glyph_emitter` | Convenience: fallback (•). |
+| `emit_stabilized` | `glyph_emitter` | Convenience: stabilization anchor emission (G∅λ). |
+| `emit_strain_spike` | `glyph_emitter` | Convenience: tension spike (Ξ). |
+| `glyph_for_stability_delta` | `glyph_emitter` | Map a stability-score change to a glyph. |
+| `glyph_for_xi_delta` | `glyph_emitter` | Map a ξ change to a glyph. |
+| `glyph_wrapper` | `glyph_emitter` | Decorator to emit glyphs on success/failure of a function. |
+| `check_collapse_drift` | `identity_checks` | Scan texts for collapse drift patterns. |
+| `has_collapse_drift` | `identity_checks` | Return True if collapse drift is detected in *texts*. |
+| `score_identity_stability` | `identity_checks` | Compute a simple stability score for given texts. |
+| `load_identity_anchors` | `identity_loader` | Load and validate memory anchors from *path*. |
+| `compute_xi` | `xi_metrics` | Compute ξ for a sequence of Ψ vectors. |
+| `compute_xi_from_transcript` | `xi_metrics` | Compute ξ from a transcript using a user-supplied embedding function. |
+| `export_csv` | `xi_metrics` | Write timestamps,xi to a CSV file. |
+| `export_json` | `xi_metrics` | Write {timestamps, xi, meta} to a JSON file. |
+| `pack_result` | `xi_metrics` | Bundle ξ + timestamps + meta into a dataclass for export. |
+| `stabilization_summary` | `xi_metrics` | Summarize a ξ series for quick CI assertions and dashboards. |
+<!-- FUNCTION-TABLE:END -->
+
 ## 🧪 Unique Contributions
 
 | Feature | Description |
