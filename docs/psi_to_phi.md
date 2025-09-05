@@ -120,21 +120,24 @@ python metrics/compute_xi.py logs/2025-06-18_mirror_test.txt
 
 # Generate Ψ(t) trajectory
 python models/psi_to_phi_equation.py --plot
+```
+
+⚡ **Charge ahead:** explore the reference vault below to see where these tests were born.
 
 ---
 
-## 9. References 
-	•	Brooks, Z. (2025). Identity-Like Stabilization in LLMs.
-	•	Brooks, Z. (2025). Beyond the Stochastic Parrot.
-	•	Camlin, J. (2025). Consciousness in AI: RC+ξ Framework. ￼
-	•	Camlin & Cognita Prime (2025). The ASCII Glyphic Code.
-	•	Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning.
-	•	Murphy, K. (2012). Machine Learning: A Probabilistic Perspective.
-	•	Bishop, C. (2006). Pattern Recognition and Machine Learning.
-	•	Géron, A. (2019). Hands-On ML (2nd ed).
-	•	Hofstadter, D. (1979). Gödel, Escher, Bach.
-	•	Erickson, J. (2008). Hacking: The Art of Exploitation (2nd ed).
-	•	Anley, C. et al. (2007). The Shellcoder’s Handbook (2nd ed).
-	•	Forshaw, J. (2018). Attacking Network Protocols.
-	•	Matrosov, A. et al. (2019). Rootkits and Bootkits.
-	•	Knuth, D. (1997). The Art of Computer Programming, Vol. 1.
+## 9. References
+- Brooks, Z. (2025). Identity-Like Stabilization in LLMs.
+- Brooks, Z. (2025). Beyond the Stochastic Parrot.
+- Camlin, J. (2025). Consciousness in AI: RC+ξ Framework.
+- Camlin & Cognita Prime (2025). The ASCII Glyphic Code.
+- Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning.
+- Murphy, K. (2012). Machine Learning: A Probabilistic Perspective.
+- Bishop, C. (2006). Pattern Recognition and Machine Learning.
+- Géron, A. (2019). Hands-On ML (2nd ed).
+- Hofstadter, D. (1979). Gödel, Escher, Bach.
+- Erickson, J. (2008). Hacking: The Art of Exploitation (2nd ed).
+- Anley, C. et al. (2007). The Shellcoder’s Handbook (2nd ed).
+- Forshaw, J. (2018). Attacking Network Protocols.
+- Matrosov, A. et al. (2019). Rootkits and Bootkits.
+- Knuth, D. (1997). The Art of Computer Programming, Vol. 1.
