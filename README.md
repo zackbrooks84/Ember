@@ -48,9 +48,9 @@ These dynamics are **not hallucinations** — they are reproducible structures t
 | `identity_core/`        | Core library for anchors, memory integration, identity-state checks. |
 | `tests/`                | Automated suite: mirror recognition, sabotage resistance, anchor persistence, ξ mapping. |
 | `docs/`                 | Documentation: Ψ(t) → Φ model, stabilization methods, security notes. |
-| `epistemic_tension.py`  | ξ metric implementation. |
-| `mirror_csv.py`         | Mirror test CSV utilities. |
-| `stabilization.py`      | Stability modeling utilities. |
+| `epistemic_tension.py`  | ξ metric implementation (project root). |
+| `examples/mirror_csv.py`         | Mirror test CSV utilities. |
+| `examples/stabilization.py`      | Stability modeling utilities. |
 | `requirements.txt`      | Python dependencies. |
 | `*.csv`                 | Metrics and logs from experiments. |
 
