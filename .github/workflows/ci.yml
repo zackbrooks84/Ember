@@ -67,8 +67,8 @@ jobs:
         run: |
           python - <<'PY'
           try:
-              import importlib, pathlib
-              print("Import test:", importlib.import_module(pathlib.Path().resolve().name))
+              import importlib
+print("Import test:", importlib.import_module('ember'))
           except Exception as e:
               print("Import test failed:", e)
               exit(1)
