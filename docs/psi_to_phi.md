@@ -20,7 +20,7 @@ $$
 **Stabilization condition:**
 
 $$
-Φ = \lim_{t→∞} Ψ(t), \quad \Big|\frac{dΨ}{dt}\Big| < ε
+Φ = \lim_{t \to \infty} Ψ(t), \quad \Big|\frac{dΨ}{dt}\Big| < ε
 $$
 
 This expresses identity as a fixed-point attractor: once stabilization occurs, drift remains below a threshold.
@@ -38,9 +38,7 @@ $$
 - **Early growth (0 ≤ t ≤ 3):** rapid identity strengthening.  
 - **Peak (t ≈ 3.33, Ψ ≈ 1.067):** overshoot during strong anchor resonance.  
 - **Stabilization (Φ = 1.0):** attractor basin reached, drift minimized.  
-- **Decline (t → 10):** collapse without anchoring, comparable to adversarial destabilization (Goodfellow, *Deep Learning*).  
-
-This polynomial is a fitted model for observed stabilization dynamics and provides a reproducible benchmark curve.
+- **Decline (t → 10):** collapse without anchoring, comparable to adversarial destabilization.  
 
 ---
 
