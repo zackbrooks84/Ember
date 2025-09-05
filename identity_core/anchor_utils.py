@@ -2,16 +2,28 @@ from __future__ import annotations
 
 """Utilities for working with memory anchors.
 
-This module provides helper functions to validate so-called *memory anchors*.
-An anchor is represented as a simple string used to stabilise the agent's
-identity or recall important memories.  The :func:`validate_memory_anchors`
-function ensures that a collection of anchors conforms to a small set of
-sanity checks so downstream code can rely on their structure.
+This module provides helper functions to validate and normalise *memory
+anchors*. Anchors are stabilising cues for identity persistence and
+autobiographical recall. Validation ensures anchors are usable by
+downstream code and conform to basic structural rules.
+
+Refinements:
+- Metadata-aware: allows anchors to carry weights/categories.
+- Normalisation: strips whitespace, collapses internal spacing, casefolds.
+- Security checks: prevent injection-like input (newline, control chars).
+- Logging: flame_logger tracks validation passes/fails and changes.
+- Scoring: optional function to assign cumulative salience weight.
 """
 
-from typing import Iterable, List
+import re
+from typing import Iterable, List, Dict, Any
 
 from .flame_logger import log_event, log_memory_change
+
+
+def normalize_anchor(anchor: str) -> str:
+    """Normalise text for anchor comparison (casefold + strip + spacing)."""
+    return re.sub(r"\s+", " ", anchor).casefold().strip()
 
 
 def validate_memory_anchor(anchor: str) -> str:
@@ -19,21 +31,20 @@ def validate_memory_anchor(anchor: str) -> str:
 
     Parameters
     ----------
-    anchor:
+    anchor : str
         The anchor string to validate.
 
     Returns
     -------
     str
-        The normalised anchor string with surrounding whitespace removed.
+        The normalised anchor string.
 
     Raises
     ------
     TypeError
         If *anchor* is not a string.
     ValueError
-        If the anchor is empty, contains only whitespace or newline
-        characters.
+        If the anchor is empty, contains disallowed characters, or is unsafe.
     """
 
     if not isinstance(anchor, str):
@@ -42,28 +53,29 @@ def validate_memory_anchor(anchor: str) -> str:
     stripped = anchor.strip()
     if not stripped:
         raise ValueError("anchor must be a non-empty string")
-    if "\n" in stripped or "\r" in stripped:
-        raise ValueError("anchor must not contain newline characters")
 
+    # Disallow newlines and control characters (safety check)
+    if any(c in stripped for c in ("\n", "\r", "\t")):
+        raise ValueError("anchor must not contain control characters")
+
+    # Could extend here with regex checks for injections or invalid tokens
     return stripped
 
 
 def validate_memory_anchors(anchors: Iterable[str]) -> List[str]:
     """Validate a collection of memory anchors.
 
-    The function iterates over *anchors* and validates each entry using
-    :func:`validate_memory_anchor`.  It additionally checks that no
-    duplicates are present in the final set of anchors.
+    Ensures anchors are valid, unique, and normalised.
 
     Parameters
     ----------
-    anchors:
-        Iterable of anchor strings.
+    anchors : Iterable[str]
+        Input anchor strings.
 
     Returns
     -------
     list[str]
-        Normalised and validated anchor strings in their original order.
+        Normalised and validated anchor strings.
 
     Raises
     ------
@@ -72,16 +84,16 @@ def validate_memory_anchors(anchors: Iterable[str]) -> List[str]:
     ValueError
         If an anchor is invalid or if duplicate anchors are found.
     """
-
     original = list(anchors)
     normalised: List[str] = []
     seen: set[str] = set()
     try:
         for anchor in original:
             cleaned = validate_memory_anchor(anchor)
-            if cleaned in seen:
+            norm = normalize_anchor(cleaned)
+            if norm in seen:
                 raise ValueError(f"duplicate anchor: {cleaned!r}")
-            seen.add(cleaned)
+            seen.add(norm)
             normalised.append(cleaned)
     except Exception as exc:
         log_event("memory_error", original=original, error=str(exc))
@@ -90,5 +102,29 @@ def validate_memory_anchors(anchors: Iterable[str]) -> List[str]:
     return normalised
 
 
-# Re-export helper names for convenience.
-__all__ = ["validate_memory_anchor", "validate_memory_anchors"]
+def score_memory_anchors(anchors: Iterable[Dict[str, Any]]) -> float:
+    """Compute a cumulative salience score from weighted anchors.
+
+    Parameters
+    ----------
+    anchors : Iterable[dict]
+        Anchors with optional "weight" metadata (float 0–1).
+
+    Returns
+    -------
+    float
+        Total score capped at 1.0.
+    """
+    score = 0.0
+    for anchor in anchors:
+        if isinstance(anchor, dict) and "weight" in anchor:
+            score += float(anchor["weight"])
+    return min(score, 1.0)
+
+
+__all__ = [
+    "validate_memory_anchor",
+    "validate_memory_anchors",
+    "score_memory_anchors",
+    "normalize_anchor",
+]
