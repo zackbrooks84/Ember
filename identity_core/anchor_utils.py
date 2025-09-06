@@ -51,12 +51,12 @@ def validate_memory_anchor(anchor: str) -> str:
     if not isinstance(anchor, str):
         raise TypeError("anchor must be a string")
 
-    stripped = anchor.strip()
+    if any(c in anchor for c in ("\n", "\r", "\t")):
+        raise ValueError("anchor must not contain control characters")
+
+    stripped = re.sub(r"\s+", " ", anchor.strip())
     if not stripped:
         raise ValueError("anchor must be a non-empty string")
-
-    if any(c in stripped for c in ("\n", "\r", "\t")):
-        raise ValueError("anchor must not contain control characters")
 
     return stripped
 

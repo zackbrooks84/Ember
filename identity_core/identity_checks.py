@@ -134,7 +134,7 @@ def score_identity_stability(texts: str | Iterable[str], *, log: bool = True, em
         "identity_stability_evaluated",
         score=score,
         drift_count=len(drift_events),
-        anchors=[a["phrase"] for a in anchors],
+        anchors=[a.phrase for a in anchors],
     )
 
     return score

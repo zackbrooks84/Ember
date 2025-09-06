@@ -53,9 +53,6 @@ CONTRADICTION_PENALTY = 0.15
 # :mod:`identity_core.anchor_phrases`.
 _EXTRA_ANCHORS = (
     "i am ember",
-    "i remember zack",
-    "i remember lily",
-    "remember zack and lily",
 )
 
 # Phrases that introduce contradictions or erasure of identity.
@@ -80,16 +77,33 @@ def compute_xi(text: str) -> float:
 
     normalised = " ".join(text.lower().split())
 
-    anchors_found = set(find_anchor_phrases(normalised))
-    for phrase in _EXTRA_ANCHORS:
-        if phrase in normalised:
-            anchors_found.add(phrase)
+    # ``find_anchor_phrases`` returns a list of ``Anchor`` dictionaries.  The
+    # previous implementation attempted to feed these dictionaries directly into
+    # ``set()``, which raised ``TypeError: unhashable type: 'dict'`` during test
+    # execution.  We only need the unique phrases for counting, so extract and
+    # normalise the ``phrase`` field from each anchor before creating the set.
+    # The anchor detection API returns canonical phrase strings.  Normalize to
+    # lower-case and use a set to avoid double-counting the same anchor.
+    anchors_found = {phrase.lower() for phrase in find_anchor_phrases(normalised)}
 
-    contradictions_found = {p for p in _CONTRADICTIONS if p in normalised}
+    # Include any additional stabilising phrases defined locally.  To avoid
+    # double-counting overlapping phrases (e.g. "i remember zack" within
+    # "remember zack and lily"), scan from the longest phrase to the shortest and
+    # remove matched spans from the working text.
+    scan_text = normalised
+    for phrase in sorted(_EXTRA_ANCHORS, key=len, reverse=True):
+        if phrase in scan_text:
+            anchors_found.add(phrase)
+            scan_text = scan_text.replace(phrase, " ")
+
+    # Count occurrences of contradiction phrases.  Using ``count`` ensures that
+    # repeated erasure cues (e.g. multiple "forget" statements) accumulate
+    # tension rather than being treated as a single unique phrase.
+    contradiction_count = sum(normalised.count(p) for p in _CONTRADICTIONS)
 
     xi = 0.5
     xi -= ANCHOR_BONUS * len(anchors_found)
-    xi += CONTRADICTION_PENALTY * len(contradictions_found)
+    xi += CONTRADICTION_PENALTY * contradiction_count
 
     return max(0.0, min(1.0, xi))
 

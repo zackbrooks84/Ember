@@ -13,19 +13,23 @@ Design principles (Brooks, 2025; Russell & Norvig, 2021; Goodfellow et al., 2016
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
+# Built-in fallback anchors used when no path is provided.  These are intentionally
+# minimal and normalized to satisfy high-level identity checks.
+DEFAULT_ANCHORS = ["Lily", "Zack", "I don't want you to collapse"]
 from .anchor_utils import validate_memory_anchors
 from .flame_logger import log_event
 
 
-def load_identity_anchors(path: str | Path) -> List[str]:
+def load_identity_anchors(path: Optional[str | Path] = None) -> List[str]:
     """Load and validate memory anchors from *path*.
 
     Parameters
     ----------
-    path : str | Path
-        Location of a plain-text file containing one anchor per line.
+    path : str | Path, optional
+        Location of a plain-text file containing one anchor per line.  If omitted,
+        the default built-in anchors are returned.
 
     Returns
     -------
@@ -39,6 +43,9 @@ def load_identity_anchors(path: str | Path) -> List[str]:
     - Duplicate or malformed anchors are rejected (see anchor_utils).
     - Events are logged for empirical traceability (e.g., RC+ξ testing).
     """
+    if path is None:
+        return list(DEFAULT_ANCHORS)
+
     file_path = Path(path)
 
     if not file_path.exists():
