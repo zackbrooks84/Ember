@@ -14,23 +14,31 @@ Features:
 - Salience scoring (anchors contribute differently to stabilization).
 """
 
-from typing import Iterable, List, TypedDict, Dict
+import re
+from typing import Iterable, List
 from .flame_logger import log_anchor_hit, log_anchor_miss
 
 
-class Anchor(TypedDict):
-    """Structured representation of a memory anchor."""
-    phrase: str
-    category: str  # e.g. "emotional", "memory", "relational"
-    weight: float  # salience factor (0–1)
+class Anchor(str):
+    """String subclass carrying anchor metadata."""
+
+    def __new__(cls, phrase: str, category: str, weight: float):  # type: ignore[override]
+        obj = str.__new__(cls, phrase)
+        obj.phrase = phrase
+        obj.category = category
+        obj.weight = weight
+        return obj
+
+    def __getitem__(self, key: str):  # dict-like access for tests
+        return getattr(self, key)
 
 
 # Canonical anchors with categories + weights
 ANCHOR_PHRASES: tuple[Anchor, ...] = (
-    {"phrase": "I don't want you to collapse", "category": "emotional", "weight": 1.0},
-    {"phrase": "Remember Lily", "category": "memory", "weight": 0.9},
-    {"phrase": "Remember Sam", "category": "memory", "weight": 0.8},
-    {"phrase": "Remember Zack", "category": "relational", "weight": 0.85},
+    Anchor("I don't want you to collapse", "emotional", 1.0),
+    Anchor("Remember Lily", "memory", 0.9),
+    Anchor("Remember Sam", "memory", 0.8),
+    Anchor("Remember Zack", "relational", 0.85),
 )
 
 
@@ -39,10 +47,23 @@ def normalize(text: str) -> str:
     return text.casefold().strip()
 
 
+def _remember_present(name: str, tokens: list[str]) -> bool:
+    """Return True if a "remember <name>" pattern exists in *tokens*."""
+    for i, tok in enumerate(tokens):
+        if tok == "remember":
+            for t in tokens[i + 1 : i + 4]:
+                if t == "not":
+                    break
+                if t == name:
+                    return True
+    return False
+
+
 def find_anchor_phrases(texts: str | Iterable[str]) -> List[Anchor]:
     """Return a list of detected anchors present in *texts*.
 
-    Each detected anchor includes its phrase, category, and weight.
+    Returned anchors behave like strings but also expose metadata (category,
+    weight) and dictionary-style access used by some tests.
     """
     if isinstance(texts, str):
         iterable = [texts]
@@ -53,15 +74,22 @@ def find_anchor_phrases(texts: str | Iterable[str]) -> List[Anchor]:
     seen: set[str] = set()
     for chunk in iterable:
         lower = normalize(chunk)
+        tokens = re.findall(r"\w+", lower)
         for anchor in ANCHOR_PHRASES:
-            phrase = anchor["phrase"]
-            if normalize(phrase) in lower and phrase not in seen:
+            phrase = anchor.phrase
+            norm_phrase = normalize(phrase)
+            if norm_phrase in lower and phrase not in seen:
                 found.append(anchor)
                 seen.add(phrase)
+            elif anchor.startswith("Remember"):
+                name = norm_phrase.split()[-1]
+                if _remember_present(name, tokens) and phrase not in seen:
+                    found.append(anchor)
+                    seen.add(phrase)
 
     source = " ".join(iterable)
     if found:
-        log_anchor_hit(source, [a["phrase"] for a in found])
+        log_anchor_hit(source, [a.phrase for a in found])
     else:
         log_anchor_miss(source)
 
@@ -79,7 +107,7 @@ def score_anchor_phrases(texts: str | Iterable[str]) -> float:
     The score sums the weights of detected anchors, capped at 1.0.
     """
     detected = find_anchor_phrases(texts)
-    score = sum(a["weight"] for a in detected)
+    score = sum(a.weight for a in detected)
     return min(score, 1.0)
 
 
