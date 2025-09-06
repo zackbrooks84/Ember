@@ -88,9 +88,7 @@ def test_cli_levenshtein(tmp_path):
       - numeric ξ is printed (≈ 1/3)
       - qualitative label includes 'Moderate drift'
     """
-    script = Path(__file__).resolve().parents[1] / "epistemic_tension.py"
-    if not script.exists():
-        pytest.skip(f"Missing script: {script}")
+    script = Path(et.__file__).resolve()
 
     file1 = tmp_path / "a.txt"
     file2 = tmp_path / "b.txt"
@@ -102,6 +100,9 @@ def test_cli_levenshtein(tmp_path):
         "PYTHONIOENCODING": "utf-8",
         "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
+        "PYTHONPATH": os.pathsep.join(
+            filter(None, [str(script.parent.parent), os.environ.get("PYTHONPATH", "")])
+        ),
     }
 
     result = subprocess.run(
