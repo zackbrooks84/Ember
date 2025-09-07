@@ -1,26 +1,18 @@
 {
-  "WITHOUT_anchors": {
-    "count": 5,
-    "mean": 0.87,
-    "median": 0.88,
-    "p90": 0.90,
-    "p95": 0.91,
-    "std": 0.03
-  },
   "WITH_anchors": {
     "count": 5,
-    "mean": 0.22,
-    "median": 0.22,
+    "mean": 0.2,
+    "median": 0.2,
     "p90": 0.28,
     "p95": 0.29,
-    "std": 0.08
+    "std": 0.079
   },
-  "by_assistant_turn": {
-    "count": 3,
-    "mean": 0.977,
-    "median": 0.985,
-    "p90": 0.988,
-    "p95": 0.989,
-    "std": 0.015
+  "WITHOUT_anchors": {
+    "count": 5,
+    "mean": 0.852,
+    "median": 0.85,
+    "p90": 0.892,
+    "p95": 0.896,
+    "std": 0.04
   }
 }
