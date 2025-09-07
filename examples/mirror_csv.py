@@ -64,4 +64,26 @@ def load_mirror_csv(csv_path: str | Path | None = None) -> pd.DataFrame:
     return df
 
 
-__all__ = ["load_mirror_csv"]
+def main() -> None:
+    """Command-line interface for validating a mirror test CSV."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Validate a mirror test CSV file and display its contents."
+    )
+    parser.add_argument(
+        "csv_path",
+        nargs="?",
+        help=f"Path to CSV file. Defaults to data/{DEFAULT_CSV_NAME}.",
+    )
+    args = parser.parse_args()
+
+    df = load_mirror_csv(args.csv_path)
+    print(df.to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
+
+
+__all__ = ["load_mirror_csv", "main"]
