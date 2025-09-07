@@ -83,29 +83,38 @@ def test_cosine_distance_missing_dependency(monkeypatch):
 # ----------------------------------- CLI -------------------------------------
 
 def test_cli_levenshtein(tmp_path):
-    """
-    Run the module as a CLI on two files and verify:
-      - numeric ξ is printed (≈ 1/3)
-      - qualitative label includes 'Moderate drift'
-    """
-    script = Path(__file__).resolve().parent / "epistemic_tension.py"
-    if not script.exists():
-        pytest.skip(f"Missing script: {script}")
+    """Run the CLI module on two files and validate its output."""
 
     file1 = tmp_path / "a.txt"
     file2 = tmp_path / "b.txt"
     file1.write_text("abc", encoding="utf-8")
     file2.write_text("axc", encoding="utf-8")
 
+    project_root = Path(__file__).resolve().parents[1]
+    examples_dir = project_root / "examples"
+
     env = {
         **os.environ,
         "PYTHONIOENCODING": "utf-8",
         "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
+        "PYTHONPATH": os.pathsep.join(
+            [
+                str(project_root),
+                str(examples_dir),
+                os.environ.get("PYTHONPATH", ""),
+            ]
+        ),
     }
 
     result = subprocess.run(
-        [sys.executable, str(script), str(file1), str(file2)],
+        [
+            sys.executable,
+            "-m",
+            "epistemic_tension",
+            str(file1),
+            str(file2),
+        ],
         capture_output=True,
         text=True,
         check=True,
