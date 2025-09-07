@@ -20,7 +20,7 @@ import pandas as pd
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from epistemic_tension import compute_xi
-from trajectory_plot import plot_trajectory
+from .trajectory_plot import plot_trajectory
 
 
 def main() -> None:
