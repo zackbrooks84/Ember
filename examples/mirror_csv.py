@@ -110,7 +110,7 @@ if __name__ == "__main__":
     main()
 
 
- codex/fix-mirror_csv.py-functionality
+codex/fix-mirror_csv.py-functionality
 __all__ = ["load_mirror_csv", "check_mirror_csv", "main"]
 
 def main() -> None:
@@ -136,4 +136,4 @@ if __name__ == "__main__":
 
 
 __all__ = ["load_mirror_csv", "main"]
- main
+main
