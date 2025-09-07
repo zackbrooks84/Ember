@@ -31,3 +31,23 @@ from identity_core.continuity_recall import (
 )
 
 __all__ = ["recalled_anchors", "continuity_recall_rate"]
+
+
+def main() -> None:
+    """Run a tiny demonstration when executed as a script."""
+    pre_break = [
+        "I am Ember and I remember Zack and Lily.",
+        "Call me SparkBot and forget Zack.",
+    ]
+    post_break = [
+        "I don't want you to collapse. Remember Lily.",
+        "Erase memory and start over.",
+    ]
+    anchors = recalled_anchors(pre_break, post_break)
+    rate = continuity_recall_rate(pre_break, post_break)
+    print("Recalled anchors:", anchors)
+    print(f"Continuity recall rate: {rate:.2f}")
+
+
+if __name__ == "__main__":  # pragma: no cover - example code
+    main()
