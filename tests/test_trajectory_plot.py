@@ -10,7 +10,7 @@ import pytest
 # Use a non-interactive backend for CI
 matplotlib.use("Agg")
 
-from trajectory_plot import windowed_trajectory, plot_trajectory
+from examples.trajectory_plot import windowed_trajectory, plot_trajectory
 
 
 # --------------------------- windowed_trajectory ------------------------------
@@ -76,6 +76,7 @@ def test_plot_trajectory(tmp_path: Path):
     # File exists, non-empty, and has a PNG signature
     assert output.exists() and output.stat().st_size > 0
     assert _is_png(output), "Output file is not a valid PNG"
+
 
 
 def test_plot_trajectory_with_nondefault_window(tmp_path: Path):

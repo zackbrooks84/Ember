@@ -17,7 +17,7 @@ is provided the rolling mean is plotted alongside the raw series.
 
 Example::
 
-    python trajectory_plot.py xi_metrics.csv --column xi --window 5 --output xi.png
+    python examples/trajectory_plot.py xi_metrics.csv --column xi --window 5 --output xi.png
 
 """
 

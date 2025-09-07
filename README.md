@@ -147,9 +147,9 @@ Expected output:
 ## 🔁 Reproduce Figures
 
 ```bash
-python trajectory_plot.py "xi_metrics.csv" --output xi_curve.png
-python trajectory_plot.py "metrics_with_anchors.csv" --output stabilization_traj.png
-python baseline_run.py
+python examples/trajectory_plot.py "xi_metrics.csv" --output xi_curve.png
+python examples/trajectory_plot.py "metrics_with_anchors.csv" --output stabilization_traj.png
+python examples/baseline_run.py
 ```
 
 ---
