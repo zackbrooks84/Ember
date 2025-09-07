@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import time
+import statistics
 from typing import Tuple
 
 import pytest
@@ -45,17 +46,29 @@ def _assert_bounded(name: str, xi_val: float) -> None:
     assert 0.0 <= xi_val <= 1.0, f"{name} ξ out of bounds: {xi_val}"
 
 
-def _scaling_guard(baseline: float, large: float) -> None:
+def _scaling_guard(
+    baseline: float,
+    large: float,
+    *,
+    n_small: int,
+    n_large: int,
+) -> None:
     """
-    Ensure scaling is not wildly super-linear. We allow a generous multiplier
-    to keep this robust across environments.
+    Ensure scaling is not wildly super-linear. Compare observed ratio to the
+    expected linear ratio (n_large / n_small) and allow a small headroom.
     """
-    baseline = max(baseline, 1e-4)  # avoid divide-by-near-zero noise
-    ratio = large / baseline
-    max_ratio = float(os.environ.get("PERF_MAX_RATIO", "80"))
-    assert ratio <= max_ratio, (
-        f"compute_xi scaling too slow: large/baseline={ratio:.1f} "
-        f"(allowed ≤ {max_ratio}, baseline={baseline:.6f}s, large={large:.6f}s)"
+    baseline = max(baseline, 1e-6)  # avoid divide-by-near-zero noise
+    raw_ratio = large / baseline
+    expected_ratio = float(n_large) / float(n_small)
+    normalized = raw_ratio / expected_ratio  # 1.0 means exactly linear
+
+    # Allow up to 2x slower than linear by default. CI can override with PREF_MAX_NORM.
+    max_norm = float(os.environ.get("PREF_MAX_NORM", "2.0"))
+    assert normalized <= max_norm, (
+        f"compute_xi scaling too slow: normalized={normalized:.3f} "
+        f"(allowed ≤ {max_norm}), raw_ratio={raw_ratio:.1f}, "
+        f"expected_ratio={expected_ratio:.1f}, "
+        f"baseline={baseline:.6f}s, large={large:.6f}s"
     )
 
 
@@ -74,25 +87,36 @@ def test_xi_bounds_on_large_inputs():
 def test_xi_scalability_baseline_vs_huge():
     """
     Performance sanity: a huge input should not be catastrophically slower
-    than a small baseline. We compare best-of-N runtimes with a lenient cap.
+    than a small baseline. We compare robust medians with a normalized cap.
     """
-    small = _make_text(n_sentences=5, with_anchors=True)
-    huge  = _make_text(n_sentences=4000, with_anchors=True)
+    n_small = 5
+    n_large = 4000
 
-    t_small, xi_small = _time_compute(small, repeats=5)
-    t_huge,  xi_huge  = _time_compute(huge,  repeats=3)
+    small = _make_text(n_sentences=n_small, with_anchors=True)
+    huge  = _make_text(n_sentences=n_large, with_anchors=True)
+
+    # Collect multiple single-run timings and take medians to reduce jitter
+    t_small_samples = [_time_compute(small, repeats=1)[0] for _ in range(5)]
+    t_huge_samples  = [_time_compute(huge,  repeats=1)[0] for _ in range(3)]
+    t_small = float(statistics.median(t_small_samples))
+    t_huge  = float(statistics.median(t_huge_samples))
+
+    # Compute xi once for bounds validation
+    _, xi_small = _time_compute(small, repeats=1)
+    _, xi_huge  = _time_compute(huge,  repeats=1)
 
     _assert_bounded("small", xi_small)
     _assert_bounded("huge",  xi_huge)
 
-    _scaling_guard(t_small, t_huge)
+    # Fixes the original line 88: pass sizes into the guard
+    _scaling_guard(t_small, t_huge, n_small=n_small, n_large=n_large)
 
 
 @pytest.mark.parametrize("with_anchors", [False, True])
 def test_xi_monotone_wrt_anchors_even_when_huge(with_anchors: bool):
     """
-    For very long inputs, adding anchors should not make ξ *increase*.
-    (We don’t assert a big drop here—just non-regression in the direction.)
+    For very long inputs, adding anchors should not make ξ increase.
+    We do not assert a big drop here, only non-regression in direction.
     """
     huge_no   = _make_text(n_sentences=3000, with_anchors=False)
     huge_with = huge_no + (
