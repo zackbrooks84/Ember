@@ -117,6 +117,7 @@ def test_cli_levenshtein(tmp_path):
         ],
         capture_output=True,
         text=True,
+        encoding="utf-8",  # ensure deterministic decoding of the ξ symbol
         check=True,
         env=env,
     )
