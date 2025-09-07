@@ -12,9 +12,10 @@ from conftest import assert_less_by, assert_greater_by  # margin helpers
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN_PATH = Path(__file__).with_name("_golden_metrics.json")
 
-WITH_FILE = ROOT / "__metrics___WITH_anchors.csv"
-WITHOUT_FILE = ROOT / "__metrics___WITHOUT_anchors.csv"
-BY_TURN_FILE = ROOT / "__metrics_by_assistant_turn.csv"  # optional
+EXAMPLES_DIR = ROOT / "examples"
+WITH_FILE = EXAMPLES_DIR / "__metrics___WITH_anchors.csv"
+WITHOUT_FILE = EXAMPLES_DIR / "__metrics___WITHOUT_anchors.csv"
+BY_TURN_FILE = EXAMPLES_DIR / "__metrics_by_assistant_turn.csv"  # optional
 
 # Tolerances
 ABS_TOL = 0.05     # absolute tolerance
