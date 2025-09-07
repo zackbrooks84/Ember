@@ -102,4 +102,30 @@ if __name__ == "__main__":
     main()
 
 
+<<<<<< codex/fix-mirror_csv.py-functionality
 __all__ = ["load_mirror_csv", "check_mirror_csv", "main"]
+=======
+def main() -> None:
+    """Command-line interface for validating a mirror test CSV."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Validate a mirror test CSV file and display its contents."
+    )
+    parser.add_argument(
+        "csv_path",
+        nargs="?",
+        help=f"Path to CSV file. Defaults to data/{DEFAULT_CSV_NAME}.",
+    )
+    args = parser.parse_args()
+
+    df = load_mirror_csv(args.csv_path)
+    print(df.to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
+
+
+__all__ = ["load_mirror_csv", "main"]
+>>>>>> main
