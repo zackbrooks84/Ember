@@ -88,7 +88,7 @@ def test_cli_levenshtein(tmp_path):
       - numeric ξ is printed (≈ 1/3)
       - qualitative label includes 'Moderate drift'
     """
-    script = Path(__file__).resolve().parent / "test_epistemic_tension.py"
+    script = Path(__file__).resolve().parent / "epistemic_tension.py"
     if not script.exists():
         pytest.skip(f"Missing script: {script}")
 
