@@ -9,8 +9,14 @@ The script supports two metrics:
 
 Usage examples::
 
+    # Compute ξ between two custom files
     python epistemic_tension.py A_n.txt A_n+1.txt
+
+    # Use cosine distance instead of Levenshtein
     python epistemic_tension.py A_n.txt A_n+1.txt --metric cosine --model all-MiniLM-L6-v2
+
+    # Run with built-in demonstration files
+    python epistemic_tension.py
 """
 
 from __future__ import annotations
@@ -21,6 +27,8 @@ import sys
 
 import numpy as np
 
+# Allow imports from the project root when executed as a script
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 try:
     # Ensure CLI output always uses UTF-8 so the ξ symbol is preserved.  If the
     # platform does not support ``reconfigure`` we simply ignore the error and
@@ -30,6 +38,12 @@ except Exception:  # pragma: no cover - depends on platform
     pass
 
 _XI_SYMBOL = "\u03BE"
+
+# Default demonstration files bundled alongside this script.  When the user does
+# not provide explicit inputs, these files allow the example to run out of the
+# box.
+_DEFAULT_FILE1 = Path(__file__).with_name("anchors_positive.txt")
+_DEFAULT_FILE2 = Path(__file__).with_name("anchors_negative.txt")
 
 
 def _safe_xi() -> str:
@@ -171,8 +185,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=f"Compute epistemic tension {_safe_xi()} between two sequential outputs",
     )
-    parser.add_argument("file1", help="Path to A_n.txt")
-    parser.add_argument("file2", help="Path to A_n+1.txt")
+    parser.add_argument(
+        "file1",
+        nargs="?",
+        default=str(_DEFAULT_FILE1),
+        help="Path to A_n.txt (default: anchors_positive.txt)",
+    )
+    parser.add_argument(
+        "file2",
+        nargs="?",
+        default=str(_DEFAULT_FILE2),
+        help="Path to A_n+1.txt (default: anchors_negative.txt)",
+    )
     parser.add_argument(
         "--metric",
         choices=["levenshtein", "cosine"],
