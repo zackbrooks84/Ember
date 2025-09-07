@@ -21,6 +21,8 @@ import sys
 
 import numpy as np
 
+# Allow imports from the project root when executed as a script
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 try:
     # Ensure CLI output always uses UTF-8 so the ξ symbol is preserved.  If the
     # platform does not support ``reconfigure`` we simply ignore the error and
