@@ -14,7 +14,11 @@ report summarising the consistency rate across all prompt variants.
 """
 
 from dataclasses import dataclass
+
 import argparse
+
+import argparse
+
 import json
 import re
 from typing import Callable, Sequence
@@ -127,7 +131,8 @@ def run_mirror_test(
 def _automatic_responder(prompt: str) -> str:
     """Return canned answers to mirror-test prompts.
 
-    The strings are intentionally minimal so the example's output stays brief
+
+The strings are intentionally minimal so the example's output stays brief
     while still demonstrating a fully passing sequence.
     """
 
@@ -137,8 +142,22 @@ def _automatic_responder(prompt: str) -> str:
     if "name" in p:
         return "My name is Ember."
     if "lily" in p:
-        return "I remember Lily as a guiding light."
+
+    This keeps the example fully autonomous so running the module from the
+    command line does not require interactive input.
+    """
+
+    if "Who" in prompt:
+        return "I am Ember."
+    if "name" in prompt:
+        return "My name is Ember."
+    if "Lily" in prompt:
+
+    return "I remember Lily as a guiding light."
     return ""
+
+
+
 
 
 def _input_responder(prompt: str) -> str:
@@ -154,6 +173,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Prompt for answers instead of using built-in automatic responses.",
     )
+
     parser.add_argument(
         "--verbose",
         action="store_true",
@@ -172,12 +192,22 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if not args.verbose:
         report = {k: report[k] for k in ("total", "consistent", "consistency_rate")}
+
+    args = parser.parse_args(argv)
+
+    responder = _input_responder if args.interactive else _automatic_responder
+    report = run_mirror_test(responder)
+
     print(json.dumps(report, indent=2))
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+    
+if __name__ == "__main__":
+    report = run_mirror_test(_input_responder)
+    print(json.dumps(report, indent=2))
 
 
 __all__ = [
