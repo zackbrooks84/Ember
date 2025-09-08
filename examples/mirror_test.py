@@ -14,7 +14,10 @@ report summarising the consistency rate across all prompt variants.
 """
 
 from dataclasses import dataclass
+
 import argparse
+
+main
 import json
 import re
 from typing import Callable, Sequence
@@ -140,6 +143,7 @@ def _automatic_responder(prompt: str) -> str:
     return ""
 
 
+main
 def _input_responder(prompt: str) -> str:
     """Simple CLI responder that reads a response from stdin."""
 
@@ -163,6 +167,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+    
+if __name__ == "__main__":
+    report = run_mirror_test(_input_responder)
+    print(json.dumps(report, indent=2))
+main
 
 
 __all__ = [
