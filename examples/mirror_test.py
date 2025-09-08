@@ -17,7 +17,6 @@ from dataclasses import dataclass
 
 import argparse
 
-main
 import json
 import re
 from typing import Callable, Sequence
