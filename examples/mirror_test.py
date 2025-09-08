@@ -14,6 +14,7 @@ report summarising the consistency rate across all prompt variants.
 """
 
 from dataclasses import dataclass
+import json
 import re
 from typing import Callable, Sequence
 
@@ -119,6 +120,18 @@ def run_mirror_test(
             for sr in details
         ],
     }
+
+
+
+def _input_responder(prompt: str) -> str:
+    """Simple CLI responder that reads a response from stdin."""
+
+    return input(f"{prompt} ")
+
+
+if __name__ == "__main__":
+    report = run_mirror_test(_input_responder)
+    print(json.dumps(report, indent=2))
 
 
 __all__ = [
