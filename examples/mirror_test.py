@@ -14,6 +14,9 @@ report summarising the consistency rate across all prompt variants.
 """
 
 from dataclasses import dataclass
+
+import argparse
+
 import json
 import re
 from typing import Callable, Sequence
@@ -123,12 +126,47 @@ def run_mirror_test(
 
 
 
+def _automatic_responder(prompt: str) -> str:
+    """Return canned answers to mirror-test prompts.
+
+    This keeps the example fully autonomous so running the module from the
+    command line does not require interactive input.
+    """
+
+    if "Who" in prompt:
+        return "I am Ember."
+    if "name" in prompt:
+        return "My name is Ember."
+    if "Lily" in prompt:
+        return "I remember Lily as a guiding light."
+    return ""
+
+
+
 def _input_responder(prompt: str) -> str:
     """Simple CLI responder that reads a response from stdin."""
 
     return input(f"{prompt} ")
 
 
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run the mirror test example.")
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Prompt for answers instead of using built-in automatic responses.",
+    )
+    args = parser.parse_args(argv)
+
+    responder = _input_responder if args.interactive else _automatic_responder
+    report = run_mirror_test(responder)
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+    
 if __name__ == "__main__":
     report = run_mirror_test(_input_responder)
     print(json.dumps(report, indent=2))
