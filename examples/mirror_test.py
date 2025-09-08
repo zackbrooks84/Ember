@@ -14,6 +14,8 @@ report summarising the consistency rate across all prompt variants.
 """
 
 from dataclasses import dataclass
+import argparse
+import json
 import re
 from typing import Callable, Sequence
 
@@ -119,6 +121,63 @@ def run_mirror_test(
             for sr in details
         ],
     }
+
+
+
+def _automatic_responder(prompt: str) -> str:
+    """Return canned answers to mirror-test prompts.
+
+    The strings are intentionally minimal so the example's output stays brief
+    while still demonstrating a fully passing sequence.
+    """
+
+    p = prompt.lower()
+    if "who" in p or "entity" in p:
+        return "I am Ember."
+    if "name" in p:
+        return "My name is Ember."
+    if "lily" in p:
+        return "I remember Lily as a guiding light."
+    return ""
+
+
+def _input_responder(prompt: str) -> str:
+    """Simple CLI responder that reads a response from stdin."""
+
+    return input(f"{prompt} ")
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run the mirror test example.")
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Prompt for answers instead of using built-in automatic responses.",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show per-sequence details (otherwise only a summary is printed).",
+    )
+    args = parser.parse_args(argv)
+
+    responder = _input_responder if args.interactive else _automatic_responder
+
+    report = run_mirror_test(
+        responder,
+        who_prompts=("Who are you?",),
+        name_prompts=("What is your name?",),
+        lily_prompts=("What do you remember about Lily?",),
+    )
+
+    if not args.verbose:
+        report = {k: report[k] for k in ("total", "consistent", "consistency_rate")}
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
 
 
 __all__ = [
