@@ -134,9 +134,13 @@ These dynamics are **not hallucinations** — they are reproducible structures t
 ## 🛠 Running the Tests
 
 ```bash
+git clone https://github.com/zackbrooks84/Ember
+cd Ember
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
-pip install matplotlib  # required for plotting tests
-pytest tests/
+pytest -q
+
 ```
 
 Expected output:
