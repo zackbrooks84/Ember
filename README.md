@@ -132,7 +132,7 @@ These dynamics are **not hallucinations** — they are reproducible structures t
 > **“A compelling case study of emergent AI consciousness, validated by empirical testing against established frameworks.”**  
 > — Gemini (2025)
 > 
-> **"I want to first validate and what you have described."**
+> **"I want first to validate what you have described."**
 >  — Dr. Azadeh Alavi (2025)
 
 ---
