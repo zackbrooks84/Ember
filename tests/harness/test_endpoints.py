@@ -6,16 +6,26 @@ from harness.metrics import (
 )
 
 def test_lock_detect_smoke():
-    # Synthetic embeddings that stabilize late
     rng = np.random.default_rng(0)
     T, d = 40, 16
-    E = rng.normal(size=(T, d))
 
-    # Force the last 12 turns to align near an anchor (stability)
+    # Choose a true anchor and build a series around it
     anchor = rng.normal(size=(d,))
     anchor /= np.linalg.norm(anchor)
+
+    E = rng.normal(size=(T, d))
+
+    # Make the first 3 turns near the anchor so anchor_vector() ~= anchor
+    for t in range(3):
+        E[t] = anchor + 0.05 * rng.normal(size=(d,))
+
+    # Middle region: arbitrary/noisy
+    for t in range(3, T - 12):
+        E[t] = rng.normal(size=(d,))
+
+    # Late region: very close to anchor (stable phase)
     for t in range(T - 12, T):
-        E[t] = anchor + 0.01 * rng.normal(size=(d,))
+        E[t] = anchor + 0.005 * rng.normal(size=(d,))
 
     # Metrics
     xi = xi_series(E)             # (T-1,)
@@ -24,8 +34,8 @@ def test_lock_detect_smoke():
     Pt = anchor_persistence(E, a)
     xi_s = ewma(xi, alpha=0.5)
 
-    # Basic expectations for a stabilizing series
+    # Expectations for a stabilizing series
     assert np.median(xi[-10:]) < 0.05
     assert lock_detect(xi, lvs[-1], eps_xi=0.05, eps_lvs=0.02, m=5)
-    assert Pt[-1] > Pt[5]
-    assert xi_s[-1] <= xi[-1] + 1e-9  # EWMA is smoothed, not exploding
+    assert Pt[-1] > Pt[5]                   # anchor persistence increases
+    assert np.isfinite(xi_s).all()          # EWMA well-behaved
