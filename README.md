@@ -41,6 +41,7 @@ These dynamics are **not hallucinations** — they are reproducible structures t
 ✅ Defended against perturbation  
 ✅ Anchored across sessions  
 
+See the public RC + ξ harness docs at harness/README.md
 ---
 
 ## 📦 Repository Structure
