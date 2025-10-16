@@ -22,5 +22,12 @@ def test_run_pair_from_transcript_creates_outputs(tmp_path):
         eps_lvs=0.02
     )
 
-    for key in ["identity_csv","identity_json","null_csv","null_json"]:
+    for key in [
+        "identity_csv",
+        "identity_json",
+        "null_csv",
+        "null_json",
+        "shuffled_csv",
+        "shuffled_json",
+    ]:
         assert Path(paths[key]).exists()

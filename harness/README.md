@@ -33,7 +33,21 @@ Defined in `harness/config.yaml`:
 
 ## Outputs
 - Per-turn CSV columns: `t, xi, lvs, Pt, ewma_xi, run_type, provider`
-- Summary JSON: `E1_median_xi_last10, Tlock, k, m, eps_xi, eps_lvs, provider, run_type`
+- Summary JSON (per run): `E1_median_xi_last10, Tlock, k, m, eps_xi, eps_lvs, provider, run_type`
+- Combined results JSON (`run_all_from_transcript`): merges Identity/Null/Shuffled summaries with
+  statistical checks (`E1_pass`, `E3_pass`, `shuffle_breaks_lock`, `Tlock_*`).
+
+`run_pair_from_transcript` now emits Identity, Null, and Shuffled artifacts by default. Control
+determinism is exposed via `--shuffle_seed`. The evaluation CLI accepts the shuffled CSV as an
+optional input:
+
+```bash
+python -m harness.analysis.eval_cli \
+  --identity_csv out/demo.identity.csv \
+  --null_csv out/demo.null.csv \
+  --shuffled_csv out/demo.shuffled.csv \
+  --out_json out/demo.eval.json
+```
 
 ## Quickstart
 Once you have a `(T, d)` NumPy file of embeddings:
