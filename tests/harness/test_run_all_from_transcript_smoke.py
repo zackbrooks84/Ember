@@ -33,5 +33,15 @@ def test_run_all_from_transcript(tmp_path):
     assert out_results.exists()
     data = json.loads(out_results.read_text(encoding="utf-8"))
     # Basic keys present
-    for key in ["E1_pass", "E3_pass", "Tlock_identity", "identity_csv", "null_csv"]:
+    for key in [
+        "E1_pass",
+        "E3_pass",
+        "shuffle_breaks_lock",
+        "Tlock_identity",
+        "Tlock_null",
+        "Tlock_shuffled",
+        "identity_csv",
+        "null_csv",
+        "shuffled_csv",
+    ]:
         assert key in data
