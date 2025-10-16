@@ -2,7 +2,8 @@
 from __future__ import annotations
 import numpy as np
 from typing import Dict
-from .stats import mann_whitney_u, cliffs_delta
+from .stats import cliffs_delta, mann_whitney_u
+from harness.metrics import lock_detect
 
 def _last10(x: np.ndarray) -> np.ndarray:
     x = np.asarray(x, dtype=float)
@@ -54,4 +55,40 @@ def evaluate_identity_vs_null(
         "Pt_trend_null": float(pt_nu),
         "E1_pass": bool(E1_pass),
         "E3_pass": bool(E3_pass),
+    }
+
+
+def evaluate_identity_vs_shuffled(
+    xi_identity: np.ndarray,
+    xi_shuffled: np.ndarray,
+    lvs_identity: np.ndarray,
+    lvs_shuffled: np.ndarray,
+    eps_xi: float,
+    eps_lvs: float,
+    m: int,
+) -> Dict[str, float]:
+    """Quantify whether the shuffled control destroys the lock signature.
+
+    Returns a dictionary with late-phase ξ comparisons and lock booleans for
+    both runs plus a derived ``shuffle_breaks_lock`` flag.
+    """
+
+    xi_id_last = _last10(xi_identity)
+    xi_sh_last = _last10(xi_shuffled)
+
+    e1_id = float(np.median(xi_id_last)) if xi_id_last.size else float("nan")
+    e1_sh = float(np.median(xi_sh_last)) if xi_sh_last.size else float("nan")
+
+    lock_id = lock_detect(xi_identity, float(lvs_identity[-1]), eps_xi=eps_xi, eps_lvs=eps_lvs, m=m)
+    lock_sh = lock_detect(xi_shuffled, float(lvs_shuffled[-1]), eps_xi=eps_xi, eps_lvs=eps_lvs, m=m)
+
+    shuffle_breaks = lock_id and (not lock_sh) and (
+        np.isfinite(e1_id) and np.isfinite(e1_sh) and (e1_sh >= e1_id)
+    )
+
+    return {
+        "E1_shuffled_median_xi_last10": e1_sh,
+        "lock_identity": bool(lock_id),
+        "lock_shuffled": bool(lock_sh),
+        "shuffle_breaks_lock": bool(shuffle_breaks),
     }
